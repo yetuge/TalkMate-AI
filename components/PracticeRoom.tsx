@@ -77,6 +77,8 @@ type CorrectionResult = {
   usedFallback: boolean;
 };
 
+const STREAM_RENDER_FLUSH_INTERVAL_MS = 45;
+
 function parseSseBlock(block: string) {
   const lines = block.split(/\r?\n/);
   const dataLines: string[] = [];
@@ -132,17 +134,27 @@ async function streamChatReply({
 
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
-  let buffer = "";
+  let sseBuffer = "";
+  let renderBuffer = "";
   let reply = "";
   let provider: StreamChatResult["provider"];
   let streamError: string | undefined;
+
+  function flushRenderBuffer() {
+    if (!renderBuffer) {
+      return;
+    }
+
+    reply += renderBuffer;
+    renderBuffer = "";
+    onReply(reply);
+  }
 
   function handleBlock(block: string) {
     const { event, data } = parseSseBlock(block);
 
     if (event === "token" && typeof data.token === "string") {
-      reply += data.token;
-      onReply(reply);
+      renderBuffer += data.token;
     }
 
     if (
@@ -157,28 +169,38 @@ async function streamChatReply({
     }
   }
 
-  while (true) {
-    const { value, done } = await reader.read();
+  const flushTimer = window.setInterval(
+    flushRenderBuffer,
+    STREAM_RENDER_FLUSH_INTERVAL_MS,
+  );
 
-    if (done) {
-      break;
-    }
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
 
-    buffer += decoder.decode(value, { stream: true });
-    const blocks = buffer.split("\n\n");
-    buffer = blocks.pop() ?? "";
+      if (done) {
+        break;
+      }
 
-    for (const block of blocks) {
-      if (block.trim()) {
-        handleBlock(block);
+      sseBuffer += decoder.decode(value, { stream: true });
+      const blocks = sseBuffer.split("\n\n");
+      sseBuffer = blocks.pop() ?? "";
+
+      for (const block of blocks) {
+        if (block.trim()) {
+          handleBlock(block);
+        }
       }
     }
-  }
 
-  buffer += decoder.decode();
+    sseBuffer += decoder.decode();
 
-  if (buffer.trim()) {
-    handleBlock(buffer);
+    if (sseBuffer.trim()) {
+      handleBlock(sseBuffer);
+    }
+  } finally {
+    window.clearInterval(flushTimer);
+    flushRenderBuffer();
   }
 
   if (!reply && streamError) {
