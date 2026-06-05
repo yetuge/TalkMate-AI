@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { ChatMessage } from "@/components/ChatMessage";
 import { FeedbackPanel } from "@/components/FeedbackPanel";
-import { LoadingDots } from "@/components/LoadingDots";
 import { StatusNotice } from "@/components/StatusNotice";
 import { VoiceRecorder } from "@/components/VoiceRecorder";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
@@ -53,11 +52,6 @@ function createMockFeedback(text: string): Correction {
   };
 }
 
-type ChatApiResponse = {
-  reply?: string;
-  error?: string;
-};
-
 type CorrectionApiResponse = Partial<Correction> & {
   error?: string;
 };
@@ -71,6 +65,166 @@ type SaveSessionApiResponse = {
   provider?: "supabase" | "localStorage";
   error?: string;
 };
+
+type StreamChatResult = {
+  reply: string;
+  provider?: "deepseek" | "fallback";
+  error?: string;
+};
+
+type CorrectionResult = {
+  correction: Correction;
+  usedFallback: boolean;
+};
+
+function parseSseBlock(block: string) {
+  const lines = block.split(/\r?\n/);
+  const dataLines: string[] = [];
+  let event = "message";
+
+  for (const line of lines) {
+    if (line.startsWith("event:")) {
+      event = line.slice("event:".length).trim();
+    }
+
+    if (line.startsWith("data:")) {
+      dataLines.push(line.slice("data:".length).trimStart());
+    }
+  }
+
+  if (dataLines.length === 0) {
+    return { event, data: {} as Record<string, unknown> };
+  }
+
+  try {
+    return {
+      event,
+      data: JSON.parse(dataLines.join("\n")) as Record<string, unknown>,
+    };
+  } catch {
+    return { event, data: {} as Record<string, unknown> };
+  }
+}
+
+async function streamChatReply({
+  scenarioId,
+  messages,
+  onReply,
+}: {
+  scenarioId: string;
+  messages: ChatMessageType[];
+  onReply: (reply: string) => void;
+}): Promise<StreamChatResult> {
+  const response = await fetch("/api/chat/stream", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      scenario: scenarioId,
+      messages,
+    }),
+  });
+
+  if (!response.ok || !response.body) {
+    throw new Error("Chat stream request failed.");
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let reply = "";
+  let provider: StreamChatResult["provider"];
+  let streamError: string | undefined;
+
+  function handleBlock(block: string) {
+    const { event, data } = parseSseBlock(block);
+
+    if (event === "token" && typeof data.token === "string") {
+      reply += data.token;
+      onReply(reply);
+    }
+
+    if (
+      event === "done" &&
+      (data.provider === "deepseek" || data.provider === "fallback")
+    ) {
+      provider = data.provider;
+    }
+
+    if (event === "error" && typeof data.message === "string") {
+      streamError = data.message;
+    }
+  }
+
+  while (true) {
+    const { value, done } = await reader.read();
+
+    if (done) {
+      break;
+    }
+
+    buffer += decoder.decode(value, { stream: true });
+    const blocks = buffer.split("\n\n");
+    buffer = blocks.pop() ?? "";
+
+    for (const block of blocks) {
+      if (block.trim()) {
+        handleBlock(block);
+      }
+    }
+  }
+
+  buffer += decoder.decode();
+
+  if (buffer.trim()) {
+    handleBlock(buffer);
+  }
+
+  if (!reply && streamError) {
+    throw new Error(streamError);
+  }
+
+  return { reply, provider, error: streamError };
+}
+
+async function fetchCorrectionFeedback(
+  scenarioId: string,
+  text: string,
+): Promise<CorrectionResult> {
+  try {
+    const response = await fetch("/api/correction", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        scenario: scenarioId,
+        text,
+      }),
+    });
+    const correctionData = (await response.json()) as CorrectionApiResponse;
+    const correction =
+      response.ok &&
+      correctionData.original &&
+      correctionData.corrected &&
+      correctionData.reason &&
+      correctionData.betterExpression &&
+      correctionData.scores
+        ? (correctionData as Correction)
+        : createMockFeedback(text);
+
+    return {
+      correction,
+      usedFallback: !response.ok || Boolean(correctionData.error),
+    };
+  } catch {
+    return {
+      correction: createMockFeedback(text),
+      usedFallback: true,
+    };
+  }
+}
 
 export function PracticeRoom({ scenario }: PracticeRoomProps) {
   const router = useRouter();
@@ -108,9 +262,10 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
     stopRecording();
 
     const userMessage = createMessage("user", text);
+    const assistantMessage = createMessage("assistant", "");
     const nextMessages = [...messages, userMessage];
 
-    setMessages(nextMessages);
+    setMessages([...nextMessages, assistantMessage]);
     resetTranscript();
     setCurrentFeedback(undefined);
     setIsLoading(true);
@@ -118,73 +273,73 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
     setStatusMessage(null);
     setErrorMessage(null);
 
-    try {
-      const [chatResponse, correctionResponse] = await Promise.all([
-        fetch("/api/chat", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            scenario: scenario.id,
-            messages: nextMessages,
-          }),
-        }),
-        fetch("/api/correction", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            scenario: scenario.id,
-            text,
-          }),
-        }),
-      ]);
-      const chatData = (await chatResponse.json()) as ChatApiResponse;
-      const correctionData =
-        (await correctionResponse.json()) as CorrectionApiResponse;
-      const reply =
-        chatData.reply ??
-        "Good answer. Can you add one more detail to make it sound more natural?";
-      const correction =
-        correctionData.original &&
-        correctionData.corrected &&
-        correctionData.reason &&
-        correctionData.betterExpression &&
-        correctionData.scores
-          ? (correctionData as Correction)
-          : createMockFeedback(text);
+    const correctionPromise = fetchCorrectionFeedback(scenario.id, text);
 
-      setMessages((currentMessages) => [
-        ...currentMessages,
-        createMessage("assistant", reply),
+    try {
+      const [chatResult, correctionResult] = await Promise.all([
+        streamChatReply({
+          scenarioId: scenario.id,
+          messages: nextMessages,
+          onReply: (reply) => {
+            setMessages((currentMessages) =>
+              currentMessages.map((message) =>
+                message.id === assistantMessage.id
+                  ? { ...message, content: reply }
+                  : message,
+              ),
+            );
+          },
+        }),
+        correctionPromise,
       ]);
-      setCurrentFeedback(correction);
+
+      if (!chatResult.reply) {
+        setMessages((currentMessages) =>
+          currentMessages.map((message) =>
+            message.id === assistantMessage.id
+              ? {
+                  ...message,
+                  content:
+                    "Good answer. Can you add one more detail to make it sound more natural?",
+                }
+              : message,
+          ),
+        );
+      }
+
+      setCurrentFeedback(correctionResult.correction);
       setCorrections((currentCorrections) => [
         ...currentCorrections,
-        correction,
+        correctionResult.correction,
       ]);
-      if (!chatData.reply || correctionData.error) {
+      if (
+        chatResult.provider === "fallback" ||
+        chatResult.error ||
+        correctionResult.usedFallback
+      ) {
         setStatusMessage(
           "Some AI services used a fallback response, but your practice flow is still saved.",
         );
       }
       setIsSpeaking(true);
     } catch {
-      const fallbackCorrection = createMockFeedback(text);
+      const correctionResult = await correctionPromise;
 
-      setMessages((currentMessages) => [
-        ...currentMessages,
-        createMessage(
-          "assistant",
-          "Good answer. Can you add one more detail to make it sound more natural?",
+      setMessages((currentMessages) =>
+        currentMessages.map((message) =>
+          message.id === assistantMessage.id
+            ? {
+                ...message,
+                content:
+                  "Good answer. Can you add one more detail to make it sound more natural?",
+              }
+            : message,
         ),
-      ]);
-      setCurrentFeedback(fallbackCorrection);
+      );
+      setCurrentFeedback(correctionResult.correction);
       setCorrections((currentCorrections) => [
         ...currentCorrections,
-        fallbackCorrection,
+        correctionResult.correction,
       ]);
       setErrorMessage(
         "The AI service was unavailable, so TalkMate used a local fallback response.",
@@ -332,12 +487,6 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
             {messages.map((message) => (
               <ChatMessage message={message} key={message.id} />
             ))}
-            {isLoading ? (
-              <div className="inline-flex items-center gap-3 rounded-lg border bg-card px-4 py-3 text-sm text-muted-foreground shadow-sm">
-                <Bot className="h-4 w-4 text-primary" aria-hidden="true" />
-                AI is thinking <LoadingDots />
-              </div>
-            ) : null}
             {isSpeaking ? (
               <div className="inline-flex items-center gap-3 rounded-lg border bg-card px-4 py-3 text-sm font-semibold text-secondary shadow-sm">
                 <Volume2 className="h-4 w-4" aria-hidden="true" />
