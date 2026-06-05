@@ -30,6 +30,7 @@ https://github.com/yetuge/TalkMate-AI
 - Step 6：实现 AI 对话 API，已完成。
 - Step 7：实现即时纠错 API，已完成。
 - Step 8：实现课后报告 API，已完成。
+- Step 9：实现 Supabase 历史记录保存，已完成。
 
 详细记录见 [DEVELOPMENT_PROGRESS.md](./DEVELOPMENT_PROGRESS.md)。
 
@@ -67,6 +68,8 @@ http://localhost:3000
 
 说明：当前练习页已经接入浏览器 Web Speech API 语音识别，并通过 `/api/chat` 调用 DeepSeek API 生成 AI 回复，通过 `/api/correction` 生成即时纠错反馈，通过 `/api/report` 生成课后报告。报告暂存于 localStorage，Supabase 历史记录将在后续步骤接入。
 
+Step 9 已新增 Supabase 保存接口。配置 Supabase 后，练习结束会保存 session、messages 和 corrections；未配置时继续使用 localStorage 兜底。
+
 ## 环境变量
 
 复制 `.env.example` 为 `.env.local`，并按需填写：
@@ -78,4 +81,12 @@ DEEPSEEK_MODEL=deepseek-v4-flash
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
+```
+
+## Supabase 数据表
+
+数据库建表 SQL 位于：
+
+```text
+supabase/schema.sql
 ```
