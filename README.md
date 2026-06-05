@@ -25,6 +25,7 @@ https://github.com/yetuge/TalkMate-AI
 - Step 1：初始化项目结构和依赖，已完成。
 - Step 2：实现场景数据和页面路由，已完成。
 - Step 3：实现首页和场景选择页，已完成。
+- Step 4：实现练习页基础 UI，已完成。
 
 详细记录见 [DEVELOPMENT_PROGRESS.md](./DEVELOPMENT_PROGRESS.md)。
 
@@ -54,8 +55,10 @@ http://localhost:3000
 ## 当前可用流程
 
 ```text
-打开首页 -> 点击 Start Practice -> 选择场景 -> 进入练习页占位
+打开首页 -> 点击 Start Practice -> 选择场景 -> 进入练习页 -> 输入文本并发送 -> 查看模拟 AI 回复和即时反馈
 ```
+
+说明：当前练习页使用本地 UI 模拟 AI 回复和纠错反馈，真实语音识别与 OpenAI API 将在后续步骤接入。
 
 ## 环境变量
 

@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { ArrowLeft, SearchX } from "lucide-react";
+import { PracticeRoom } from "@/components/PracticeRoom";
 import { getScenarioById } from "@/lib/scenarios";
 
 type PracticePageProps = {
@@ -11,39 +13,28 @@ export default async function PracticePage({ searchParams }: PracticePageProps) 
   const { scenario: scenarioId } = await searchParams;
   const scenario = getScenarioById(scenarioId);
 
-  return (
-    <main className="flex min-h-screen items-center justify-center px-6 py-10">
-      <section className="w-full max-w-3xl rounded-lg border bg-card p-6 text-card-foreground">
-        <p className="text-sm font-semibold uppercase text-secondary">
-          Step 2
-        </p>
-        <h1 className="mt-3 text-3xl font-bold">
-          Practice Route Ready
-        </h1>
-        {scenario ? (
-          <div className="mt-5 space-y-3">
-            <p className="text-muted-foreground">
-              Selected scenario:{" "}
-              <span className="font-medium text-foreground">
-                {scenario.title}
-              </span>
-            </p>
-            <p className="rounded-lg bg-muted p-4 text-sm">
-              AI opening question: {scenario.openingQuestion}
-            </p>
+  if (!scenario) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-muted px-6 py-10">
+        <section className="w-full max-w-xl rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
+          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+            <SearchX className="h-6 w-6" aria-hidden="true" />
           </div>
-        ) : (
-          <div className="mt-5 space-y-3">
-            <p className="text-muted-foreground">
-              No valid scenario was provided. Choose a scenario before starting
-              practice.
-            </p>
-            <Link className="text-sm font-semibold text-primary" href="/scenarios">
-              Back to scenarios
-            </Link>
-          </div>
-        )}
-      </section>
-    </main>
-  );
+          <h1 className="mt-5 text-3xl font-black">Scenario not found</h1>
+          <p className="mt-3 leading-7 text-muted-foreground">
+            Choose a valid practice scenario before entering the speaking room.
+          </p>
+          <Link
+            className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-bold text-primary-foreground shadow-sm transition hover:translate-y-[-1px] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            href="/scenarios"
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            Back to scenarios
+          </Link>
+        </section>
+      </main>
+    );
+  }
+
+  return <PracticeRoom scenario={scenario} />;
 }

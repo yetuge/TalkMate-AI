@@ -20,9 +20,9 @@ TalkMate AI 是一个 Web 端 AI 英语口语陪练 MVP。目标用户流程如�
 
 ## 当前状态
 
-当前阶段：**Step 3 已完成**
+当前阶段：**Step 4 已完成**
 
-项目已经初始化为一个最小可运行的 Next.js 应用，完成基础场景数据、主要页面路由占位，并实现首页与场景选择页的可用入口流程。
+项目已经初始化为一个最小可运行的 Next.js 应用，完成基础场景数据、主要页面路由占位、首页与场景选择页，并实现练习页基础 UI。
 
 ## 已完成工作
 
@@ -79,6 +79,23 @@ TalkMate AI 是一个 Web 端 AI 英语口语陪练 MVP。目标用户流程如�
 - `/scenarios` 页面展示四个指定练习场景卡片。
 - 点击场景卡片可进入 `/practice?scenario=...`。
 
+### Step 4：实现练习页基础 UI
+
+状态：**已完成**
+
+已完成内容：
+
+- 将 `/practice` 页面从路由占位升级为基础练习界面。
+- 新增 `components/PracticeRoom.tsx` 客户端练习房间组件。
+- 新增 `components/ChatMessage.tsx` 聊天气泡组件。
+- 新增 `components/FeedbackPanel.tsx` 即时反馈面板组件。
+- 新增 `components/VoiceRecorder.tsx` 底部输入控制组件。
+- 新增 `components/LoadingDots.tsx` 加载状态组件。
+- 练习页支持根据 `scenario` 查询参数加载对应场景。
+- 练习页包含桌面端聊天区和反馈区布局，移动端自动上下排列。
+- 底部控制区包含开始录音、停止录音、当前识别文本、发送、结束练习按钮。
+- 目前发送消息使用本地 UI 模拟反馈和 AI 回复，真实语音识别与 AI API 将在后续步骤接入。
+
 主要新增文件：
 
 ```text
@@ -109,6 +126,11 @@ app/practice/page.tsx
 app/history/page.tsx
 app/report/[sessionId]/page.tsx
 components/ScenarioCard.tsx
+components/PracticeRoom.tsx
+components/ChatMessage.tsx
+components/FeedbackPanel.tsx
+components/VoiceRecorder.tsx
+components/LoadingDots.tsx
 ```
 
 ## 验证记录
@@ -160,6 +182,19 @@ http://localhost:3000/scenarios
 - 点击 `Start Practice` 能进入 `/scenarios`。
 - `/scenarios` 显示四个场景卡片。
 - 点击任意场景卡片能进入对应 `/practice?scenario=...` 页面。
+
+Step 4 页面验证重点：
+
+```text
+http://localhost:3000/practice?scenario=job-interview
+```
+
+需要确认：
+
+- 页面左侧/上方显示聊天区域。
+- 页面右侧/下方显示即时反馈区域。
+- 底部显示录音、文本输入、发送和结束练习控制。
+- 输入英文句子并点击 `Send` 后，聊天区会新增用户消息、模拟 AI 回复和反馈内容。
 
 说明：当前受限环境中，开发服务器无法作为隐藏后台进程稳定保活，但前台启动已验证成功。
 
@@ -234,7 +269,7 @@ supabase/
 
 ### Step 4：实现练习页基础 UI
 
-状态：**未开始**
+状态：**已完成**
 
 目标：
 
@@ -328,6 +363,12 @@ feat: add scenario data and routes
 feat: build home and scenario selection pages
 ```
 
+建议第四个 commit：
+
+```text
+feat: build practice page base UI
+```
+
 建议第一个 PR 描述：
 
 ```text
@@ -351,4 +392,4 @@ feat: build home and scenario selection pages
 
 ## 下一步
 
-开始 **Step 4：实现练习页基础 UI**。
+开始 **Step 5：实现 Web Speech API 语音识别 Hook**。
