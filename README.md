@@ -35,6 +35,7 @@ https://github.com/yetuge/TalkMate-AI
 - Step 11：优化 UI、Loading、错误处理和空状态，已完成。
 - Step 12：实现 SSE 流式 AI 回复，已完成。
 - Step 13：中文化主要界面文案，已完成。
+- Step 14：优化 SSE 流式回复的前端缓冲渲染，已完成。
 
 详细记录见 [DEVELOPMENT_PROGRESS.md](./DEVELOPMENT_PROGRESS.md)。
 
@@ -82,6 +83,8 @@ Step 11 已统一练习页、历史页和报告页的加载、错误、fallback 
 Step 12 已新增 SSE 流式对话接口。练习页发送文本后，AI 回复会逐步输出到同一条消息气泡中；即时纠错仍然并行生成，保证对话体验更自然。
 
 Step 13 已将主要页面、按钮、状态提示、反馈面板和报告栏目改为中文展示；英文对话内容、纠错后的英文句子和练习句子仍保留英文，便于继续进行口语训练。
+
+Step 14 已为 SSE 流式回复增加双缓冲处理。`sseBuffer` 用于拼接完整 SSE 消息，`renderBuffer` 用于按固定间隔批量刷新 token 到消息气泡中，降低 React 高频重渲染并让输出节奏更平滑。
 
 ## 环境变量
 
