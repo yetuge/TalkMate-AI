@@ -20,9 +20,9 @@ TalkMate AI 是一个 Web 端 AI 英语口语陪练 MVP。目标用户流程如�
 
 ## 当前状态
 
-当前阶段：**Step 2 已完成**
+当前阶段：**Step 3 已完成**
 
-项目已经初始化为一个最小可运行的 Next.js 应用，并完成基础场景数据和主要页面路由占位。完整页面 UI 和业务功能尚未开始。
+项目已经初始化为一个最小可运行的 Next.js 应用，完成基础场景数据、主要页面路由占位，并实现首页与场景选择页的可用入口流程。
 
 ## 已完成工作
 
@@ -59,6 +59,26 @@ TalkMate AI 是一个 Web 端 AI 英语口语陪练 MVP。目标用户流程如�
 - 添加 `/history` 页面路由占位。
 - 添加 `/report/[sessionId]` 动态报告页面路由占位。
 
+### Step 3：实现首页和场景选择页
+
+状态：**已完成**
+
+已完成内容：
+
+- 将首页从初始化占位页升级为正式产品入口。
+- 首页展示产品名 `TalkMate AI`。
+- 首页展示 Slogan：`Practice Real English Conversations with AI`。
+- 首页添加 `Start Practice` 按钮，点击进入 `/scenarios`。
+- 首页展示五个核心功能：
+  - Scenario Speaking Practice
+  - AI Real-Time Conversation
+  - Grammar Correction
+  - Session Summary
+  - Growth Tracking
+- 新增 `components/ScenarioCard.tsx` 场景卡片组件。
+- `/scenarios` 页面展示四个指定练习场景卡片。
+- 点击场景卡片可进入 `/practice?scenario=...`。
+
 主要新增文件：
 
 ```text
@@ -88,6 +108,7 @@ app/scenarios/page.tsx
 app/practice/page.tsx
 app/history/page.tsx
 app/report/[sessionId]/page.tsx
+components/ScenarioCard.tsx
 ```
 
 ## 验证记录
@@ -125,6 +146,20 @@ http://localhost:3000/practice?scenario=job-interview
 http://localhost:3000/history
 http://localhost:3000/report/demo-session
 ```
+
+Step 3 页面验证重点：
+
+```text
+http://localhost:3000
+http://localhost:3000/scenarios
+```
+
+需要确认：
+
+- 首页产品名、Slogan、开始按钮和功能介绍正常展示。
+- 点击 `Start Practice` 能进入 `/scenarios`。
+- `/scenarios` 显示四个场景卡片。
+- 点击任意场景卡片能进入对应 `/practice?scenario=...` 页面。
 
 说明：当前受限环境中，开发服务器无法作为隐藏后台进程稳定保活，但前台启动已验证成功。
 
@@ -189,7 +224,7 @@ supabase/
 
 ### Step 3：实现首页和场景选择页
 
-状态：**未开始**
+状态：**已完成**
 
 目标：
 
@@ -287,6 +322,12 @@ feat: initialize TalkMate AI project
 feat: add scenario data and routes
 ```
 
+建议第三个 commit：
+
+```text
+feat: build home and scenario selection pages
+```
+
 建议第一个 PR 描述：
 
 ```text
@@ -310,4 +351,4 @@ feat: add scenario data and routes
 
 ## 下一步
 
-开始 **Step 3：实现首页和场景选择页**。
+开始 **Step 4：实现练习页基础 UI**。
