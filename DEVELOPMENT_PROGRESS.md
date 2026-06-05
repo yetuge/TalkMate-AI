@@ -20,9 +20,9 @@ TalkMate AI 是一个 Web 端 AI 英语口语陪练 MVP。目标用户流程如�
 
 ## 当前状态
 
-当前阶段：**Step 8 已完成**
+当前阶段：**Step 9 已完成**
 
-项目已经初始化为一个最小可运行的 Next.js 应用，完成基础场景数据、主要页面路由占位、首页与场景选择页、练习页基础 UI、浏览器语音识别 Hook、AI 对话 API、即时纠错 API，并实现课后报告 API。
+项目已经初始化为一个最小可运行的 Next.js 应用，完成基础场景数据、主要页面路由占位、首页与场景选择页、练习页基础 UI、浏览器语音识别 Hook、AI 对话 API、即时纠错 API、课后报告 API，并实现 Supabase 历史记录保存。
 
 ## 已完成工作
 
@@ -176,6 +176,21 @@ TalkMate AI 是一个 Web 端 AI 英语口语陪练 MVP。目标用户流程如�
 - 报告结果暂存 localStorage，并跳转 `/report/[sessionId]` 展示。
 - 未配置 `DEEPSEEK_API_KEY` 或接口调用失败时，会返回 fallback 报告，保证演示流程可继续。
 
+### Step 9：实现 Supabase 历史记录保存
+
+状态：**已完成**
+
+已完成内容：
+
+- 基于 `feat/step-9-supabase-history` 分支开发，准备通过 PR 合并。
+- 新增 `lib/supabase.ts`。
+- 新增 `supabase/schema.sql`。
+- 新增 `app/api/sessions/route.ts`。
+- `POST /api/sessions` 支持保存练习会话、聊天消息和纠错记录。
+- `GET /api/sessions` 支持按时间倒序获取历史会话摘要。
+- 练习页生成报告后会调用 `/api/sessions` 保存结果。
+- Supabase 未配置时，保存接口返回 `provider: "localStorage"`，主流程继续使用 localStorage 兜底。
+
 主要新增文件：
 
 ```text
@@ -220,6 +235,9 @@ app/api/correction/route.ts
 app/api/report/route.ts
 lib/json.ts
 components/ReportView.tsx
+lib/supabase.ts
+supabase/schema.sql
+app/api/sessions/route.ts
 ```
 
 ## 验证记录
@@ -351,6 +369,20 @@ POST http://localhost:3000/api/report
 ```
 
 如果没有配置 DeepSeek API Key，`provider` 会返回 `fallback`。练习页点击 `End` 后应跳转到 `/report/[sessionId]` 并展示本地报告。
+
+Step 9 API 验证重点：
+
+```text
+POST http://localhost:3000/api/sessions
+GET http://localhost:3000/api/sessions
+```
+
+需要确认：
+
+- 未配置 Supabase 时，练习结束后报告页仍可通过 localStorage 正常展示。
+- 配置 Supabase 后，练习结束会写入 `practice_sessions`。
+- 聊天消息会写入 `practice_messages`。
+- 纠错记录会写入 `practice_corrections`。
 
 Step 7 API 验证重点：
 
@@ -505,7 +537,7 @@ supabase/
 
 ### Step 9：实现 Supabase 历史记录保存
 
-状态：**未开始**
+状态：**已完成**
 
 目标：
 
@@ -584,6 +616,12 @@ feat: add instant correction API
 feat: add learning report API
 ```
 
+建议第九个 PR 标题：
+
+```text
+feat: add Supabase session history
+```
+
 建议第一个 PR 描述：
 
 ```text
@@ -607,4 +645,4 @@ feat: add learning report API
 
 ## 下一步
 
-开始 **Step 9：实现 Supabase 历史记录保存**。
+完成 Step 9 PR 后，开始 **Step 10：实现历史记录页和报告页**。

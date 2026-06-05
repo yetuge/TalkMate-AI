@@ -65,6 +65,12 @@ type ReportApiResponse = Partial<PracticeReport> & {
   error?: string;
 };
 
+type SaveSessionApiResponse = {
+  id?: string;
+  provider?: "supabase" | "localStorage";
+  error?: string;
+};
+
 export function PracticeRoom({ scenario }: PracticeRoomProps) {
   const router = useRouter();
   const openingMessage = useMemo(
@@ -204,22 +210,45 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
         }),
       });
       const report = (await response.json()) as ReportApiResponse;
-      const sessionId = `local-${Date.now()}`;
+      const localSessionId = `local-${Date.now()}`;
+      const endedAt = new Date();
+      const localSession = {
+        id: localSessionId,
+        scenario: scenario.id,
+        scenarioTitle: scenario.title,
+        startedAt: startedAt.toISOString(),
+        endedAt: endedAt.toISOString(),
+        durationSeconds,
+        messages,
+        corrections,
+        report,
+      };
 
       window.localStorage.setItem(
-        `talkmate-report-${sessionId}`,
-        JSON.stringify({
-          id: sessionId,
-          scenario: scenario.id,
-          scenarioTitle: scenario.title,
-          startedAt: startedAt.toISOString(),
-          endedAt: new Date().toISOString(),
-          durationSeconds,
-          messages,
-          corrections,
-          report,
-        }),
+        `talkmate-report-${localSessionId}`,
+        JSON.stringify(localSession),
       );
+
+      const saveResponse = await fetch("/api/sessions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(localSession),
+      });
+      const savedSession = (await saveResponse.json()) as SaveSessionApiResponse;
+      const sessionId = savedSession.id ?? localSessionId;
+
+      if (sessionId !== localSessionId) {
+        window.localStorage.setItem(
+          `talkmate-report-${sessionId}`,
+          JSON.stringify({
+            ...localSession,
+            id: sessionId,
+          }),
+        );
+      }
+
       router.push(`/report/${sessionId}`);
     } catch {
       window.alert("Report generation failed. Please try again.");
