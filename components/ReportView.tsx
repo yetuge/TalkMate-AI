@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2, ClipboardList } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ClipboardList, Loader2 } from "lucide-react";
 import type { Correction, PracticeReport, ScenarioId } from "@/lib/types";
+import { scenarioMap } from "@/lib/scenarios";
 
 type LocalReportSession = {
   id: string;
@@ -14,6 +15,12 @@ type LocalReportSession = {
   durationSeconds: number;
   corrections: Correction[];
   report: PracticeReport;
+};
+
+type SessionApiResponse = {
+  session?: Omit<LocalReportSession, "scenarioTitle"> | null;
+  provider?: "supabase" | "localStorage";
+  error?: string;
 };
 
 type ReportViewProps = {
@@ -36,20 +43,65 @@ function formatDuration(seconds: number) {
 
 export function ReportView({ sessionId }: ReportViewProps) {
   const [session, setSession] = useState<LocalReportSession | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const stored = window.localStorage.getItem(`talkmate-report-${sessionId}`);
+    let isMounted = true;
 
-    if (!stored) {
-      return;
+    async function loadReport() {
+      const stored = window.localStorage.getItem(`talkmate-report-${sessionId}`);
+
+      if (stored) {
+        try {
+          setSession(JSON.parse(stored) as LocalReportSession);
+          setIsLoading(false);
+          return;
+        } catch {
+          setSession(null);
+        }
+      }
+
+      try {
+        const response = await fetch(`/api/sessions?id=${sessionId}`);
+        const data = (await response.json()) as SessionApiResponse;
+
+        if (!isMounted || !data.session) {
+          return;
+        }
+
+        setSession({
+          ...data.session,
+          scenarioTitle:
+            scenarioMap[data.session.scenario]?.title ?? data.session.scenario,
+        });
+      } catch {
+        if (isMounted) {
+          setSession(null);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
     }
 
-    try {
-      setSession(JSON.parse(stored) as LocalReportSession);
-    } catch {
-      setSession(null);
-    }
+    loadReport();
+
+    return () => {
+      isMounted = false;
+    };
   }, [sessionId]);
+
+  if (isLoading) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-muted px-6 py-10">
+        <section className="flex w-full max-w-xl items-center gap-3 rounded-lg border bg-card p-6 text-muted-foreground shadow-sm">
+          <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+          Loading report
+        </section>
+      </main>
+    );
+  }
 
   if (!session) {
     return (
