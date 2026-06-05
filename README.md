@@ -32,6 +32,7 @@ https://github.com/yetuge/TalkMate-AI
 - Step 8：实现课后报告 API，已完成。
 - Step 9：实现 Supabase 历史记录保存，已完成。
 - Step 10：实现历史记录页和报告详情读取，已完成。
+- Step 11：优化 UI、Loading、错误处理和空状态，已完成。
 
 详细记录见 [DEVELOPMENT_PROGRESS.md](./DEVELOPMENT_PROGRESS.md)。
 
@@ -72,6 +73,8 @@ http://localhost:3000
 Step 9 已新增 Supabase 保存接口。配置 Supabase 后，练习结束会保存 session、messages 和 corrections；未配置时继续使用 localStorage 兜底。
 
 Step 10 已实现历史记录页。历史页会优先读取 Supabase 练习记录；未配置 Supabase 或本地演示时，会读取 localStorage 中的报告记录。
+
+Step 11 已统一练习页、历史页和报告页的加载、错误、fallback 和空状态展示。
 
 ## 环境变量
 

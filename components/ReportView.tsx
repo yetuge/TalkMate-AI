@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2, ClipboardList, Loader2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ClipboardList } from "lucide-react";
+import { StatusNotice } from "@/components/StatusNotice";
 import type { Correction, PracticeReport, ScenarioId } from "@/lib/types";
 import { scenarioMap } from "@/lib/scenarios";
 
@@ -95,10 +96,12 @@ export function ReportView({ sessionId }: ReportViewProps) {
   if (isLoading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-muted px-6 py-10">
-        <section className="flex w-full max-w-xl items-center gap-3 rounded-lg border bg-card p-6 text-muted-foreground shadow-sm">
-          <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
-          Loading report
-        </section>
+        <StatusNotice
+          className="w-full max-w-xl"
+          title="Loading report"
+          description="Looking for this report in localStorage and Supabase."
+          tone="loading"
+        />
       </main>
     );
   }
@@ -110,8 +113,8 @@ export function ReportView({ sessionId }: ReportViewProps) {
           <ClipboardList className="h-10 w-10 text-primary" aria-hidden="true" />
           <h1 className="mt-5 text-3xl font-black">Report not found</h1>
           <p className="mt-3 leading-7 text-muted-foreground">
-            This local report is not available in the browser. Complete a
-            practice session to generate a new report.
+            This report is not available in localStorage or Supabase. Complete a
+            new practice session to generate a fresh report.
           </p>
           <Link
             className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-bold text-primary-foreground shadow-sm transition hover:translate-y-[-1px] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
