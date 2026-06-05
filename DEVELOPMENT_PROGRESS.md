@@ -20,9 +20,9 @@ TalkMate AI 是一个 Web 端 AI 英语口语陪练 MVP。目标用户流程如�
 
 ## 当前状态
 
-当前阶段：**Step 6 已完成**
+当前阶段：**Step 7 已完成**
 
-项目已经初始化为一个最小可运行的 Next.js 应用，完成基础场景数据、主要页面路由占位、首页与场景选择页、练习页基础 UI、浏览器语音识别 Hook，并实现 AI 对话 API。
+项目已经初始化为一个最小可运行的 Next.js 应用，完成基础场景数据、主要页面路由占位、首页与场景选择页、练习页基础 UI、浏览器语音识别 Hook、AI 对话 API，并实现即时纠错 API。
 
 ## 已完成工作
 
@@ -135,6 +135,31 @@ TalkMate AI 是一个 Web 端 AI 英语口语陪练 MVP。目标用户流程如�
   - `DEEPSEEK_BASE_URL`
   - `DEEPSEEK_MODEL`
 
+### Step 7：实现即时纠错 API
+
+状态：**已完成**
+
+已完成内容：
+
+- 新增 `app/api/correction/route.ts`。
+- 扩展 `lib/prompts.ts`，新增纠错 Prompt。
+- `/api/correction` 支持接收用户句子和当前练习场景。
+- 返回结构包含：
+  - 原句 `original`
+  - 修改后句子 `corrected`
+  - 错误原因 `reason`
+  - 更自然表达 `betterExpression`
+  - 本轮评分 `scores`
+- 评分包含：
+  - grammar
+  - fluency
+  - vocabulary
+  - pronunciation
+- 练习页发送消息后，会并行调用 `/api/chat` 和 `/api/correction`。
+- 右侧即时反馈面板展示真实纠错 API 返回结果。
+- 未配置 `DEEPSEEK_API_KEY` 或接口调用失败时，会返回 fallback 纠错结果，保证演示流程可继续。
+- `prompt.md` 中技术栈从 `OpenAI API` 调整为 `DeepSeek API（OpenAI-compatible）`。
+
 主要新增文件：
 
 ```text
@@ -175,6 +200,7 @@ lib/speech-recognition.d.ts
 lib/ai.ts
 lib/prompts.ts
 app/api/chat/route.ts
+app/api/correction/route.ts
 ```
 
 ## 验证记录
@@ -288,6 +314,41 @@ POST http://localhost:3000/api/chat
 
 如果没有配置 DeepSeek API Key，`provider` 会返回 `fallback`。
 
+Step 7 API 验证重点：
+
+```text
+POST http://localhost:3000/api/correction
+```
+
+请求示例：
+
+```json
+{
+  "text": "I go to company yesterday.",
+  "scenario": "job-interview"
+}
+```
+
+返回示例：
+
+```json
+{
+  "original": "I go to company yesterday.",
+  "corrected": "I went to the company yesterday.",
+  "reason": "Use the past tense because the action happened yesterday.",
+  "betterExpression": "I visited the company yesterday.",
+  "scores": {
+    "grammar": 72,
+    "fluency": 76,
+    "vocabulary": 70,
+    "pronunciation": 75
+  },
+  "provider": "deepseek"
+}
+```
+
+如果没有配置 DeepSeek API Key，`provider` 会返回 `fallback`。
+
 说明：当前受限环境中，开发服务器无法作为隐藏后台进程稳定保活，但前台启动已验证成功。
 
 ## 计划中的项目结构
@@ -388,7 +449,7 @@ supabase/
 
 ### Step 7：实现即时纠错 API
 
-状态：**未开始**
+状态：**已完成**
 
 目标：
 
@@ -473,6 +534,12 @@ feat: add speech recognition hook
 feat: add AI chat API
 ```
 
+建议第七个 commit：
+
+```text
+feat: add instant correction API
+```
+
 建议第一个 PR 描述：
 
 ```text
@@ -496,4 +563,4 @@ feat: add AI chat API
 
 ## 下一步
 
-开始 **Step 7：实现即时纠错 API**。
+开始 **Step 8：实现课后报告 API**。

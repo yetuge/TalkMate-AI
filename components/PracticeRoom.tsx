@@ -55,6 +55,10 @@ type ChatApiResponse = {
   error?: string;
 };
 
+type CorrectionApiResponse = Partial<Correction> & {
+  error?: string;
+};
+
 export function PracticeRoom({ scenario }: PracticeRoomProps) {
   const openingMessage = useMemo(
     () => createMessage("assistant", scenario.openingQuestion),
@@ -89,30 +93,53 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
 
     setMessages(nextMessages);
     resetTranscript();
-    setCurrentFeedback(createMockFeedback(text));
+    setCurrentFeedback(undefined);
     setIsLoading(true);
     setIsSpeaking(false);
 
     try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          scenario: scenario.id,
-          messages: nextMessages,
+      const [chatResponse, correctionResponse] = await Promise.all([
+        fetch("/api/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            scenario: scenario.id,
+            messages: nextMessages,
+          }),
         }),
-      });
-      const data = (await response.json()) as ChatApiResponse;
+        fetch("/api/correction", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            scenario: scenario.id,
+            text,
+          }),
+        }),
+      ]);
+      const chatData = (await chatResponse.json()) as ChatApiResponse;
+      const correctionData =
+        (await correctionResponse.json()) as CorrectionApiResponse;
       const reply =
-        data.reply ??
+        chatData.reply ??
         "Good answer. Can you add one more detail to make it sound more natural?";
+      const correction =
+        correctionData.original &&
+        correctionData.corrected &&
+        correctionData.reason &&
+        correctionData.betterExpression &&
+        correctionData.scores
+          ? (correctionData as Correction)
+          : createMockFeedback(text);
 
       setMessages((currentMessages) => [
         ...currentMessages,
         createMessage("assistant", reply),
       ]);
+      setCurrentFeedback(correction);
       setIsSpeaking(true);
     } catch {
       setMessages((currentMessages) => [
@@ -122,6 +149,7 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
           "Good answer. Can you add one more detail to make it sound more natural?",
         ),
       ]);
+      setCurrentFeedback(createMockFeedback(text));
       setIsSpeaking(true);
     } finally {
       setIsLoading(false);

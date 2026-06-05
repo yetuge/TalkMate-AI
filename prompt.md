@@ -18,7 +18,7 @@
 - TailwindCSS
 - shadcn/ui
 - Supabase
-- OpenAI API
+- DeepSeek API（OpenAI-compatible）
 
 优先保证项目能跑通，功能完整度优先于复杂架构。
 
