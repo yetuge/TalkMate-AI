@@ -1,17 +1,11 @@
 import { Lightbulb, Sparkles } from "lucide-react";
 import { LoadingDots } from "@/components/LoadingDots";
+import { scoreLabels } from "@/lib/labels";
 import type { Correction } from "@/lib/types";
 
 type FeedbackPanelProps = {
   feedback?: Correction;
   isLoading?: boolean;
-};
-
-const scoreLabels = {
-  grammar: "Grammar",
-  fluency: "Fluency",
-  vocabulary: "Vocabulary",
-  pronunciation: "Pronunciation",
 };
 
 export function FeedbackPanel({ feedback, isLoading = false }: FeedbackPanelProps) {
@@ -23,14 +17,14 @@ export function FeedbackPanel({ feedback, isLoading = false }: FeedbackPanelProp
             <Sparkles className="h-5 w-5" aria-hidden="true" />
           </div>
           <div>
-            <h2 className="text-lg font-bold">Analyzing</h2>
+            <h2 className="text-lg font-bold">分析中</h2>
             <p className="text-sm text-muted-foreground">
-              Checking your grammar, fluency, vocabulary, and pronunciation
+              正在检查语法、流利度、词汇和发音表现
             </p>
           </div>
         </div>
         <div className="mt-6 rounded-lg border bg-muted/50 p-4 text-sm leading-6 text-muted-foreground">
-          Instant feedback is being prepared <LoadingDots className="ml-1" />
+          即时反馈正在生成中 <LoadingDots className="ml-1" />
         </div>
       </aside>
     );
@@ -44,15 +38,14 @@ export function FeedbackPanel({ feedback, isLoading = false }: FeedbackPanelProp
             <Sparkles className="h-5 w-5" aria-hidden="true" />
           </div>
           <div>
-            <h2 className="text-lg font-bold">Instant Feedback</h2>
+            <h2 className="text-lg font-bold">即时反馈</h2>
             <p className="text-sm text-muted-foreground">
-              Send a sentence to see corrections here.
+              发送一句英文后，这里会显示纠错结果。
             </p>
           </div>
         </div>
         <div className="mt-6 rounded-lg border bg-muted/50 p-4 text-sm leading-6 text-muted-foreground">
-          Feedback will include the original sentence, corrected sentence,
-          reason, better expression, and score breakdown.
+          反馈将包含原句、修改后句子、错误原因、更自然表达和评分明细。
         </div>
       </aside>
     );
@@ -65,22 +58,22 @@ export function FeedbackPanel({ feedback, isLoading = false }: FeedbackPanelProp
           <Lightbulb className="h-5 w-5" aria-hidden="true" />
         </div>
         <div>
-          <h2 className="text-lg font-bold">Instant Feedback</h2>
-          <p className="text-sm text-muted-foreground">Latest speaking turn</p>
+          <h2 className="text-lg font-bold">即时反馈</h2>
+          <p className="text-sm text-muted-foreground">最近一轮回答</p>
         </div>
       </div>
 
       <div className="mt-6 space-y-4">
         <section className="rounded-lg border bg-background p-4">
           <p className="text-xs font-bold uppercase text-muted-foreground">
-            Original
+            原句
           </p>
           <p className="mt-2 text-sm leading-6">{feedback.original}</p>
         </section>
 
         <section className="rounded-lg border bg-secondary/10 p-4">
           <p className="text-xs font-bold uppercase text-secondary">
-            Corrected
+            修改后
           </p>
           <p className="mt-2 text-sm font-semibold leading-6">
             {feedback.corrected}
@@ -89,7 +82,7 @@ export function FeedbackPanel({ feedback, isLoading = false }: FeedbackPanelProp
 
         <section className="rounded-lg border bg-background p-4">
           <p className="text-xs font-bold uppercase text-muted-foreground">
-            Reason
+            原因
           </p>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
             {feedback.reason}
@@ -98,7 +91,7 @@ export function FeedbackPanel({ feedback, isLoading = false }: FeedbackPanelProp
 
         <section className="rounded-lg border bg-background p-4">
           <p className="text-xs font-bold uppercase text-muted-foreground">
-            More Natural
+            更自然表达
           </p>
           <p className="mt-2 text-sm leading-6">{feedback.betterExpression}</p>
         </section>

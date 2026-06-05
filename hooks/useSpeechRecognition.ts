@@ -18,17 +18,17 @@ function getErrorMessage(error: SpeechRecognitionErrorCode) {
   switch (error) {
     case "not-allowed":
     case "service-not-allowed":
-      return "Microphone permission was denied. Please type your answer manually.";
+      return "麦克风权限被拒绝，请手动输入你的回答。";
     case "audio-capture":
-      return "No microphone was detected. Please type your answer manually.";
+      return "未检测到麦克风，请手动输入你的回答。";
     case "no-speech":
-      return "No speech was detected. Please try again or type manually.";
+      return "没有检测到语音，请重试或手动输入。";
     case "network":
-      return "Speech recognition network error. Please type manually for now.";
+      return "语音识别网络异常，请暂时手动输入。";
     case "language-not-supported":
-      return "English speech recognition is not supported in this browser.";
+      return "当前浏览器不支持英文语音识别。";
     default:
-      return "Speech recognition stopped unexpectedly. You can type manually.";
+      return "语音识别意外停止，你可以手动输入。";
   }
 }
 
@@ -113,7 +113,7 @@ export function useSpeechRecognition({
       recognition.start();
       setIsRecording(true);
     } catch {
-      setError("Speech recognition is already running. Please continue speaking.");
+      setError("语音识别已经在运行，请继续说话。");
       setIsRecording(true);
     }
   }, []);

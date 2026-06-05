@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle2, ClipboardList } from "lucide-react";
 import { StatusNotice } from "@/components/StatusNotice";
+import { getScenarioLabel, scoreLabels } from "@/lib/labels";
 import type { Correction, PracticeReport, ScenarioId } from "@/lib/types";
-import { scenarioMap } from "@/lib/scenarios";
 
 type LocalReportSession = {
   id: string;
@@ -28,18 +28,11 @@ type ReportViewProps = {
   sessionId: string;
 };
 
-const scoreLabels = {
-  grammar: "Grammar",
-  fluency: "Fluency",
-  vocabulary: "Vocabulary",
-  pronunciation: "Pronunciation",
-};
-
 function formatDuration(seconds: number) {
   const minutes = Math.floor(seconds / 60);
   const restSeconds = seconds % 60;
 
-  return `${minutes}m ${restSeconds}s`;
+  return `${minutes}分 ${restSeconds}秒`;
 }
 
 export function ReportView({ sessionId }: ReportViewProps) {
@@ -54,7 +47,12 @@ export function ReportView({ sessionId }: ReportViewProps) {
 
       if (stored) {
         try {
-          setSession(JSON.parse(stored) as LocalReportSession);
+          const parsedSession = JSON.parse(stored) as LocalReportSession;
+
+          setSession({
+            ...parsedSession,
+            scenarioTitle: getScenarioLabel(parsedSession.scenario).title,
+          });
           setIsLoading(false);
           return;
         } catch {
@@ -72,8 +70,7 @@ export function ReportView({ sessionId }: ReportViewProps) {
 
         setSession({
           ...data.session,
-          scenarioTitle:
-            scenarioMap[data.session.scenario]?.title ?? data.session.scenario,
+          scenarioTitle: getScenarioLabel(data.session.scenario).title,
         });
       } catch {
         if (isMounted) {
@@ -98,8 +95,8 @@ export function ReportView({ sessionId }: ReportViewProps) {
       <main className="flex min-h-screen items-center justify-center bg-muted px-6 py-10">
         <StatusNotice
           className="w-full max-w-xl"
-          title="Loading report"
-          description="Looking for this report in localStorage and Supabase."
+          title="正在加载报告"
+          description="正在从浏览器本地存储和 Supabase 查找这份报告。"
           tone="loading"
         />
       </main>
@@ -111,17 +108,16 @@ export function ReportView({ sessionId }: ReportViewProps) {
       <main className="flex min-h-screen items-center justify-center bg-muted px-6 py-10">
         <section className="w-full max-w-xl rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
           <ClipboardList className="h-10 w-10 text-primary" aria-hidden="true" />
-          <h1 className="mt-5 text-3xl font-black">Report not found</h1>
+          <h1 className="mt-5 text-3xl font-black">未找到报告</h1>
           <p className="mt-3 leading-7 text-muted-foreground">
-            This report is not available in localStorage or Supabase. Complete a
-            new practice session to generate a fresh report.
+            当前报告不在浏览器本地存储或 Supabase 中。请完成一次新的练习来生成报告。
           </p>
           <Link
             className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-bold text-primary-foreground shadow-sm transition hover:translate-y-[-1px] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
             href="/scenarios"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            Back to scenarios
+            返回场景选择
           </Link>
         </section>
       </main>
@@ -139,21 +135,21 @@ export function ReportView({ sessionId }: ReportViewProps) {
             href="/scenarios"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            New practice
+            新练习
           </Link>
         </nav>
 
         <div className="mt-8 grid gap-5 lg:grid-cols-[320px_1fr]">
           <aside className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
             <p className="text-sm font-bold uppercase text-secondary">
-              Session Report
+              练习报告
             </p>
             <h1 className="mt-3 text-3xl font-black">{session.scenarioTitle}</h1>
             <p className="mt-3 text-sm text-muted-foreground">
-              Duration: {formatDuration(session.durationSeconds)}
+              练习时长：{formatDuration(session.durationSeconds)}
             </p>
             <div className="mt-6 rounded-lg bg-primary p-5 text-primary-foreground">
-              <p className="text-sm font-semibold opacity-80">Overall Score</p>
+              <p className="text-sm font-semibold opacity-80">总分</p>
               <p className="mt-2 text-5xl font-black">{report.overallScore}</p>
             </div>
 
@@ -171,20 +167,20 @@ export function ReportView({ sessionId }: ReportViewProps) {
 
           <div className="space-y-5">
             <section className="rounded-lg border bg-card p-6 shadow-sm">
-              <h2 className="text-xl font-black">Summary</h2>
+              <h2 className="text-xl font-black">总结</h2>
               <p className="mt-3 leading-7 text-muted-foreground">
                 {report.summary}
               </p>
             </section>
 
             <div className="grid gap-5 lg:grid-cols-2">
-              <ReportList title="Common Mistakes" items={report.commonMistakes} />
-              <ReportList title="Suggestions" items={report.suggestions} />
+              <ReportList title="常见问题" items={report.commonMistakes} />
+              <ReportList title="改进建议" items={report.suggestions} />
               <ReportList
-                title="Practice Sentences"
+                title="练习句子"
                 items={report.practiceSentences}
               />
-              <ReportList title="Speaking Tasks" items={report.speakingTasks} />
+              <ReportList title="口语任务" items={report.speakingTasks} />
             </div>
           </div>
         </div>

@@ -90,7 +90,7 @@ export function HistoryView() {
         setLocalSessions(readLocalSessions());
         setNotice(
           data.provider === "localStorage"
-            ? "Supabase is not configured, so local browser reports are shown."
+            ? "Supabase 未配置，当前展示浏览器本地保存的报告。"
             : null,
         );
       } catch {
@@ -101,7 +101,7 @@ export function HistoryView() {
         setProvider("localStorage");
         setLocalSessions(readLocalSessions());
         setNotice(
-          "History API was unavailable, so TalkMate is showing local browser reports.",
+          "历史记录接口暂时不可用，TalkMate 正在展示浏览器本地报告。",
         );
       } finally {
         if (isMounted) {
@@ -141,32 +141,31 @@ export function HistoryView() {
             href="/scenarios"
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
-            New practice
+            新练习
           </Link>
         </nav>
 
         <header className="mt-10 rounded-lg border bg-card p-6 shadow-sm">
           <p className="text-sm font-bold uppercase text-secondary">
-            Practice History
+            练习历史
           </p>
-          <h1 className="mt-3 text-4xl font-black">Review your speaking work.</h1>
+          <h1 className="mt-3 text-4xl font-black">回顾你的口语练习</h1>
           <p className="mt-3 max-w-2xl leading-7 text-muted-foreground">
-            Open previous reports, compare scores, and continue from the next
-            scenario when you are ready.
+            打开过往报告、比较练习得分，并在准备好后继续下一个场景。
           </p>
           <p className="mt-4 text-sm text-muted-foreground">
-            Source: {provider === "supabase" ? "Supabase" : "localStorage fallback"}
+            数据来源：{provider === "supabase" ? "Supabase" : "浏览器本地存储"}
           </p>
         </header>
 
         <div className="mt-5 space-y-4">
           {isLoading ? (
-            <StatusNotice title="Loading practice history" tone="loading" />
+            <StatusNotice title="正在加载练习历史" tone="loading" />
           ) : null}
 
           {!isLoading && notice ? (
             <StatusNotice
-              title="Local fallback active"
+              title="本地备用记录已启用"
               description={notice}
               tone="info"
             />
@@ -175,16 +174,16 @@ export function HistoryView() {
           {!isLoading && sessions.length === 0 ? (
             <section className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
               <ClipboardList className="h-10 w-10 text-primary" aria-hidden="true" />
-              <h2 className="mt-5 text-2xl font-black">No practice history yet</h2>
+              <h2 className="mt-5 text-2xl font-black">暂无练习历史</h2>
               <p className="mt-3 leading-7 text-muted-foreground">
-                Finish a practice session to generate a report and see it here.
+                完成一次练习后，系统会生成报告并显示在这里。
               </p>
               <Link
                 className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-bold text-primary-foreground shadow-sm transition hover:translate-y-[-1px] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                 href="/scenarios"
               >
                 <Plus className="h-4 w-4" aria-hidden="true" />
-                Start practice
+                开始练习
               </Link>
             </section>
           ) : null}

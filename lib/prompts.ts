@@ -51,7 +51,7 @@ export function buildCorrectionPrompt(text: string, scenario: Scenario) {
     "Rules:",
     "- original must be the learner sentence.",
     "- corrected should fix grammar and wording while preserving meaning.",
-    "- reason should be short, clear, and in English.",
+    "- reason should be short, clear, and written in Chinese.",
     "- betterExpression should sound natural in the current scenario.",
     "- If the sentence is already good, say it is good and still provide a more natural expression.",
     "- Scores must be integers from 0 to 100.",
@@ -104,10 +104,10 @@ export function buildReportPrompt({
     "}",
     "Rules:",
     "- Scores must be integers from 0 to 100.",
-    "- commonMistakes must contain at least 3 items.",
-    "- suggestions must contain at least 3 items.",
+    "- commonMistakes must contain at least 3 Chinese items.",
+    "- suggestions must contain at least 3 Chinese items.",
     "- practiceSentences must contain at least 5 English sentences.",
-    "- speakingTasks must contain at least 5 English speaking tasks.",
+    "- speakingTasks must contain at least 5 Chinese speaking tasks.",
     "- summary must be written in Chinese.",
   ].join("\n");
 }
