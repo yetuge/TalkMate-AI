@@ -36,7 +36,7 @@ export function VoiceRecorder({
             className="inline-flex h-11 w-11 items-center justify-center rounded-lg border bg-background text-foreground transition hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
             disabled={isRecording || !isSpeechSupported}
             onClick={onStartRecording}
-            title="Start recording"
+            title="开始录音"
             type="button"
           >
             <Mic className="h-5 w-5" aria-hidden="true" />
@@ -45,7 +45,7 @@ export function VoiceRecorder({
             className="inline-flex h-11 w-11 items-center justify-center rounded-lg border bg-background text-foreground transition hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
             disabled={!isRecording || !isSpeechSupported}
             onClick={onStopRecording}
-            title="Stop recording"
+            title="停止录音"
             type="button"
           >
             <Square className="h-5 w-5" aria-hidden="true" />
@@ -55,12 +55,12 @@ export function VoiceRecorder({
         <label className="block">
           <span className="mb-2 flex items-center gap-2 text-xs font-bold uppercase text-muted-foreground">
             <Type className="h-3.5 w-3.5" aria-hidden="true" />
-            {isRecording ? "Listening" : "Current transcript"}
+            {isRecording ? "正在听你说话" : "当前识别文本"}
           </span>
           <textarea
             className="min-h-[92px] w-full resize-none rounded-lg border bg-background px-3 py-3 text-sm leading-6 outline-none transition placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-ring"
             onChange={(event) => onTranscriptChange(event.target.value)}
-            placeholder="Speak or type your English answer here."
+            placeholder="请在这里说出或输入你的英文回答。"
             value={transcript}
           />
         </label>
@@ -73,7 +73,7 @@ export function VoiceRecorder({
             type="button"
           >
             <Send className="h-4 w-4" aria-hidden="true" />
-            {isSending ? "Sending" : "Send"}
+            {isSending ? "发送中" : "发送"}
           </button>
           <button
             className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border bg-background px-4 text-sm font-bold text-foreground transition hover:border-destructive hover:text-destructive focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 lg:flex-none"
@@ -82,14 +82,14 @@ export function VoiceRecorder({
             type="button"
           >
             <XCircle className="h-4 w-4" aria-hidden="true" />
-            {isEnding ? "Ending" : "End"}
+            {isEnding ? "结束中" : "结束"}
           </button>
         </div>
       </div>
       {speechError ? (
         <StatusNotice
           className="mt-3"
-          title="Speech recognition issue"
+          title="语音识别提示"
           description={speechError}
           tone="error"
         />
@@ -97,7 +97,7 @@ export function VoiceRecorder({
       {!isSpeechSupported ? (
         <StatusNotice
           className="mt-3"
-          title="Manual input available"
+          title="可使用手动输入"
           description="当前浏览器不支持语音识别，请手动输入文本。"
           tone="warning"
         />

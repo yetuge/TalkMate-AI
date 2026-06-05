@@ -45,7 +45,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
             isUser ? "text-primary-foreground/75" : "text-muted-foreground",
           )}
         >
-          {isUser ? "You" : "TalkMate AI"}
+          {isUser ? "你" : "TalkMate AI"}
         </p>
         {message.content ? (
           <p className="mt-1 text-sm leading-6">{message.content}</p>

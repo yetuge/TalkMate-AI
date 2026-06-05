@@ -28,7 +28,7 @@ function createFallbackCorrection(text: string): Correction {
     original: trimmedText,
     corrected,
     reason:
-      "This sentence is understandable. The fallback correction adds basic punctuation and keeps the meaning clear.",
+      "这句话可以理解。备用纠错已补充基础标点，并尽量保持原意清晰。",
     betterExpression:
       "I would like to explain my answer with one clear example and one specific detail.",
     scores: {

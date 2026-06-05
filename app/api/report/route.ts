@@ -98,14 +98,14 @@ function createFallbackReport(corrections: Correction[]): PracticeReport {
     overallScore,
     scores,
     commonMistakes: [
-      "Some answers need more specific details.",
-      "Sentence structure can be more natural.",
-      "Vocabulary choices can be more varied.",
+      "部分回答还可以加入更具体的细节。",
+      "句子结构可以更加自然。",
+      "词汇选择可以更加丰富。",
     ],
     suggestions: [
-      "Give one concrete example after each answer.",
-      "Use past tense clearly when describing finished work.",
-      "Practice using transition words like first, also, and finally.",
+      "每次回答后补充一个具体例子。",
+      "描述已完成的工作时，注意清楚使用过去时。",
+      "多练习使用 first、also、finally 等连接词。",
     ],
     practiceSentences: [
       "I worked on a booking system for a real project.",
@@ -115,11 +115,11 @@ function createFallbackReport(corrections: Correction[]): PracticeReport {
       "In my opinion, this plan is practical but needs more detail.",
     ],
     speakingTasks: [
-      "Introduce yourself in one minute.",
-      "Describe one project you built.",
-      "Explain one challenge you solved.",
-      "Give your opinion about a project plan.",
-      "Ask two follow-up questions in English.",
+      "用一分钟完成英文自我介绍。",
+      "描述一个你做过的项目。",
+      "解释一个你解决过的挑战。",
+      "针对一个项目计划表达你的观点。",
+      "用英文提出两个追问。",
     ],
     summary:
       "本次练习已经能够完成基础交流。接下来可以重点提升句子细节、时态准确性和表达的自然度。",

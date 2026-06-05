@@ -34,6 +34,7 @@ https://github.com/yetuge/TalkMate-AI
 - Step 10：实现历史记录页和报告详情读取，已完成。
 - Step 11：优化 UI、Loading、错误处理和空状态，已完成。
 - Step 12：实现 SSE 流式 AI 回复，已完成。
+- Step 13：中文化主要界面文案，已完成。
 
 详细记录见 [DEVELOPMENT_PROGRESS.md](./DEVELOPMENT_PROGRESS.md)。
 
@@ -79,6 +80,8 @@ Step 10 已实现历史记录页。历史页会优先读取 Supabase 练习记�
 Step 11 已统一练习页、历史页和报告页的加载、错误、fallback 和空状态展示。
 
 Step 12 已新增 SSE 流式对话接口。练习页发送文本后，AI 回复会逐步输出到同一条消息气泡中；即时纠错仍然并行生成，保证对话体验更自然。
+
+Step 13 已将主要页面、按钮、状态提示、反馈面板和报告栏目改为中文展示；英文对话内容、纠错后的英文句子和练习句子仍保留英文，便于继续进行口语训练。
 
 ## 环境变量
 

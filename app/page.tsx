@@ -12,28 +12,28 @@ import {
 
 const features = [
   {
-    title: "Scenario Speaking Practice",
-    description: "Practice interviews, restaurants, meetings, and travel.",
+    title: "场景口语练习",
+    description: "覆盖面试、餐厅、会议和旅行等真实场景。",
     icon: MessageSquareText,
   },
   {
-    title: "AI Real-Time Conversation",
-    description: "Get short English replies that keep the dialogue moving.",
+    title: "AI 实时对话",
+    description: "获得简短自然的英文回复，持续推进练习。",
     icon: Bot,
   },
   {
-    title: "Grammar Correction",
-    description: "See corrected sentences and more natural expressions.",
+    title: "即时语法纠错",
+    description: "查看修改后句子和更自然的英文表达。",
     icon: CheckCircle2,
   },
   {
-    title: "Session Summary",
-    description: "Review scores, mistakes, suggestions, and practice tasks.",
+    title: "课后练习报告",
+    description: "回顾评分、常见问题、建议和练习任务。",
     icon: ClipboardCheck,
   },
   {
-    title: "Growth Tracking",
-    description: "Keep practice history and track progress over time.",
+    title: "学习进度追踪",
+    description: "保存练习历史，持续观察口语提升。",
     icon: BarChart3,
   },
 ];
@@ -46,31 +46,30 @@ export default function HomePage() {
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 rounded-full border bg-card px-4 py-2 text-sm font-semibold text-primary shadow-sm">
               <Sparkles className="h-4 w-4" aria-hidden="true" />
-              Web AI English speaking coach
+              AI 英语口语教练
             </div>
             <h1 className="mt-6 text-5xl font-black leading-none sm:text-7xl">
               TalkMate AI
             </h1>
             <p className="mt-6 max-w-2xl text-xl font-semibold text-foreground sm:text-2xl">
-              Practice Real English Conversations with AI
+              用 AI 练真实英语对话
             </p>
             <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
-              Pick a real-life scenario, speak or type your answer, receive an
-              English reply, and review instant corrections after each turn.
+              选择真实场景，用语音或文本回答问题，获得英文对话回复，并在每一轮结束后查看即时纠错反馈。
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-primary px-6 text-sm font-bold text-primary-foreground shadow-sm transition hover:translate-y-[-1px] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                 href="/scenarios"
               >
-                Start Practice
+                开始练习
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
               <Link
                 className="inline-flex h-12 items-center justify-center rounded-lg border bg-card px-6 text-sm font-bold text-card-foreground shadow-sm transition hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                 href="/history"
               >
-                View History
+                查看历史
               </Link>
             </div>
           </div>
@@ -79,14 +78,14 @@ export default function HomePage() {
             <div className="rounded-lg border bg-card p-4 shadow-sm">
               <div className="flex items-center justify-between gap-4 border-b pb-4">
                 <div>
-                  <p className="text-sm font-bold">Job Interview</p>
+                  <p className="text-sm font-bold">求职面试</p>
                   <p className="text-xs text-muted-foreground">
-                    AI interviewer is listening
+                    AI 面试官正在倾听
                   </p>
                 </div>
                 <div className="flex items-center gap-2 rounded-full border bg-muted px-3 py-1 text-xs font-semibold text-secondary">
                   <Mic className="h-3.5 w-3.5" aria-hidden="true" />
-                  Recording
+                  录音中
                 </div>
               </div>
 
@@ -101,7 +100,7 @@ export default function HomePage() {
                     </p>
                   </div>
                   <div className="ml-auto max-w-[82%] rounded-lg bg-primary p-4 text-primary-foreground">
-                    <p className="text-xs font-semibold opacity-80">You</p>
+                    <p className="text-xs font-semibold opacity-80">你</p>
                     <p className="mt-2 text-sm">
                       I built a booking system and improved the page loading
                       speed.
@@ -118,11 +117,11 @@ export default function HomePage() {
                 </div>
 
                 <aside className="rounded-lg border bg-background p-4">
-                  <p className="text-sm font-bold">Instant Feedback</p>
+                  <p className="text-sm font-bold">即时反馈</p>
                   <div className="mt-4 space-y-3 text-sm">
                     <div>
                       <p className="text-xs font-semibold text-muted-foreground">
-                        Better expression
+                        更自然表达
                       </p>
                       <p className="mt-1">
                         I improved the loading speed of the booking system.
@@ -130,10 +129,10 @@ export default function HomePage() {
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       {[
-                        ["Grammar", "86"],
-                        ["Fluency", "82"],
-                        ["Vocabulary", "78"],
-                        ["Pronunciation", "80"],
+                        ["语法", "86"],
+                        ["流利度", "82"],
+                        ["词汇", "78"],
+                        ["发音", "80"],
                       ].map(([label, score]) => (
                         <div className="rounded-lg bg-muted p-3" key={label}>
                           <p className="text-xs text-muted-foreground">
