@@ -4,6 +4,7 @@ type VoiceRecorderProps = {
   transcript: string;
   isRecording: boolean;
   isSending: boolean;
+  isEnding: boolean;
   isSpeechSupported: boolean;
   speechError?: string | null;
   onTranscriptChange: (value: string) => void;
@@ -17,6 +18,7 @@ export function VoiceRecorder({
   transcript,
   isRecording,
   isSending,
+  isEnding,
   isSpeechSupported,
   speechError,
   onTranscriptChange,
@@ -73,12 +75,13 @@ export function VoiceRecorder({
             {isSending ? "Sending" : "Send"}
           </button>
           <button
-            className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border bg-background px-4 text-sm font-bold text-foreground transition hover:border-destructive hover:text-destructive focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 lg:flex-none"
+            className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border bg-background px-4 text-sm font-bold text-foreground transition hover:border-destructive hover:text-destructive focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 lg:flex-none"
+            disabled={isEnding}
             onClick={onEndPractice}
             type="button"
           >
             <XCircle className="h-4 w-4" aria-hidden="true" />
-            End
+            {isEnding ? "Ending" : "End"}
           </button>
         </div>
       </div>

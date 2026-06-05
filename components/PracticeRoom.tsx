@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Bot,
@@ -17,6 +18,7 @@ import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import type {
   ChatMessage as ChatMessageType,
   Correction,
+  PracticeReport,
   Scenario,
 } from "@/lib/types";
 
@@ -59,13 +61,21 @@ type CorrectionApiResponse = Partial<Correction> & {
   error?: string;
 };
 
+type ReportApiResponse = Partial<PracticeReport> & {
+  error?: string;
+};
+
 export function PracticeRoom({ scenario }: PracticeRoomProps) {
+  const router = useRouter();
   const openingMessage = useMemo(
     () => createMessage("assistant", scenario.openingQuestion),
     [scenario.openingQuestion],
   );
+  const startedAt = useMemo(() => new Date(), []);
   const [messages, setMessages] = useState<ChatMessageType[]>([openingMessage]);
+  const [corrections, setCorrections] = useState<Correction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isEnding, setIsEnding] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [currentFeedback, setCurrentFeedback] = useState<Correction>();
   const {
@@ -140,8 +150,14 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
         createMessage("assistant", reply),
       ]);
       setCurrentFeedback(correction);
+      setCorrections((currentCorrections) => [
+        ...currentCorrections,
+        correction,
+      ]);
       setIsSpeaking(true);
     } catch {
+      const fallbackCorrection = createMockFeedback(text);
+
       setMessages((currentMessages) => [
         ...currentMessages,
         createMessage(
@@ -149,7 +165,11 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
           "Good answer. Can you add one more detail to make it sound more natural?",
         ),
       ]);
-      setCurrentFeedback(createMockFeedback(text));
+      setCurrentFeedback(fallbackCorrection);
+      setCorrections((currentCorrections) => [
+        ...currentCorrections,
+        fallbackCorrection,
+      ]);
       setIsSpeaking(true);
     } finally {
       setIsLoading(false);
@@ -159,8 +179,52 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
     }
   }
 
-  function handleEndPractice() {
-    window.alert("Report generation will be connected in Step 8.");
+  async function handleEndPractice() {
+    if (isEnding) {
+      return;
+    }
+
+    setIsEnding(true);
+
+    try {
+      const durationSeconds = Math.max(
+        1,
+        Math.round((Date.now() - startedAt.getTime()) / 1000),
+      );
+      const response = await fetch("/api/report", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          scenario: scenario.id,
+          messages,
+          corrections,
+          durationSeconds,
+        }),
+      });
+      const report = (await response.json()) as ReportApiResponse;
+      const sessionId = `local-${Date.now()}`;
+
+      window.localStorage.setItem(
+        `talkmate-report-${sessionId}`,
+        JSON.stringify({
+          id: sessionId,
+          scenario: scenario.id,
+          scenarioTitle: scenario.title,
+          startedAt: startedAt.toISOString(),
+          endedAt: new Date().toISOString(),
+          durationSeconds,
+          messages,
+          corrections,
+          report,
+        }),
+      );
+      router.push(`/report/${sessionId}`);
+    } catch {
+      window.alert("Report generation failed. Please try again.");
+      setIsEnding(false);
+    }
   }
 
   return (
@@ -236,6 +300,7 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
               transcript={transcript}
               isRecording={isRecording}
               isSending={isLoading}
+              isEnding={isEnding}
               isSpeechSupported={isSpeechSupported}
               speechError={speechError}
               onTranscriptChange={setTranscript}

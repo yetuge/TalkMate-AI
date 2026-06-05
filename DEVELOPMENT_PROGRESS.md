@@ -20,9 +20,9 @@ TalkMate AI 是一个 Web 端 AI 英语口语陪练 MVP。目标用户流程如�
 
 ## 当前状态
 
-当前阶段：**Step 7 已完成**
+当前阶段：**Step 8 已完成**
 
-项目已经初始化为一个最小可运行的 Next.js 应用，完成基础场景数据、主要页面路由占位、首页与场景选择页、练习页基础 UI、浏览器语音识别 Hook、AI 对话 API，并实现即时纠错 API。
+项目已经初始化为一个最小可运行的 Next.js 应用，完成基础场景数据、主要页面路由占位、首页与场景选择页、练习页基础 UI、浏览器语音识别 Hook、AI 对话 API、即时纠错 API，并实现课后报告 API。
 
 ## 已完成工作
 
@@ -160,6 +160,22 @@ TalkMate AI 是一个 Web 端 AI 英语口语陪练 MVP。目标用户流程如�
 - 未配置 `DEEPSEEK_API_KEY` 或接口调用失败时，会返回 fallback 纠错结果，保证演示流程可继续。
 - `prompt.md` 中技术栈从 `OpenAI API` 调整为 `DeepSeek API（OpenAI-compatible）`。
 
+### Step 8：实现课后报告 API
+
+状态：**已完成**
+
+已完成内容：
+
+- 新增 `app/api/report/route.ts`。
+- 扩展 `lib/prompts.ts`，新增课后报告 Prompt。
+- 新增 `lib/json.ts`，复用模型 JSON 解析逻辑。
+- 新增 `components/ReportView.tsx`。
+- `/api/report` 支持接收当前场景、完整对话消息、所有纠错记录和练习时长。
+- 报告返回总分、四项评分、高频错误、改进建议、推荐练习句、推荐口语任务和中文总结。
+- 点击练习页 `End` 后会调用 `/api/report`。
+- 报告结果暂存 localStorage，并跳转 `/report/[sessionId]` 展示。
+- 未配置 `DEEPSEEK_API_KEY` 或接口调用失败时，会返回 fallback 报告，保证演示流程可继续。
+
 主要新增文件：
 
 ```text
@@ -201,6 +217,9 @@ lib/ai.ts
 lib/prompts.ts
 app/api/chat/route.ts
 app/api/correction/route.ts
+app/api/report/route.ts
+lib/json.ts
+components/ReportView.tsx
 ```
 
 ## 验证记录
@@ -313,6 +332,25 @@ POST http://localhost:3000/api/chat
 ```
 
 如果没有配置 DeepSeek API Key，`provider` 会返回 `fallback`。
+
+Step 8 API 验证重点：
+
+```text
+POST http://localhost:3000/api/report
+```
+
+请求示例：
+
+```json
+{
+  "scenario": "job-interview",
+  "messages": [],
+  "corrections": [],
+  "durationSeconds": 600
+}
+```
+
+如果没有配置 DeepSeek API Key，`provider` 会返回 `fallback`。练习页点击 `End` 后应跳转到 `/report/[sessionId]` 并展示本地报告。
 
 Step 7 API 验证重点：
 
@@ -458,7 +496,7 @@ supabase/
 
 ### Step 8：实现课后报告 API
 
-状态：**未开始**
+状态：**已完成**
 
 目标：
 
@@ -540,6 +578,12 @@ feat: add AI chat API
 feat: add instant correction API
 ```
 
+建议第八个 commit：
+
+```text
+feat: add learning report API
+```
+
 建议第一个 PR 描述：
 
 ```text
@@ -563,4 +607,4 @@ feat: add instant correction API
 
 ## 下一步
 
-开始 **Step 8：实现课后报告 API**。
+开始 **Step 9：实现 Supabase 历史记录保存**。

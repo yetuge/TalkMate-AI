@@ -1,4 +1,4 @@
-import type { ChatMessage, Scenario } from "@/lib/types";
+import type { ChatMessage, Correction, Scenario } from "@/lib/types";
 
 export function buildChatSystemPrompt(scenario: Scenario) {
   return [
@@ -56,5 +56,58 @@ export function buildCorrectionPrompt(text: string, scenario: Scenario) {
     "- If the sentence is already good, say it is good and still provide a more natural expression.",
     "- Scores must be integers from 0 to 100.",
     "- Pronunciation is estimated from text fluency because no real audio is available.",
+  ].join("\n");
+}
+
+export function buildReportPrompt({
+  scenario,
+  messages,
+  corrections,
+  durationSeconds,
+}: {
+  scenario: Scenario;
+  messages: ChatMessage[];
+  corrections: Correction[];
+  durationSeconds: number;
+}) {
+  return [
+    "You are an English learning analyst.",
+    "Generate a learning report for this speaking practice session.",
+    "Return strict JSON only. Do not include markdown or explanations outside JSON.",
+    `Scenario: ${scenario.title}`,
+    `Duration seconds: ${durationSeconds}`,
+    "Conversation messages:",
+    JSON.stringify(
+      messages.map((message) => ({
+        role: message.role,
+        content: message.content,
+      })),
+      null,
+      2,
+    ),
+    "Correction records:",
+    JSON.stringify(corrections, null, 2),
+    "JSON format:",
+    "{",
+    '  "overallScore": 0,',
+    '  "scores": {',
+    '    "grammar": 0,',
+    '    "fluency": 0,',
+    '    "vocabulary": 0,',
+    '    "pronunciation": 0',
+    "  },",
+    '  "commonMistakes": [],',
+    '  "suggestions": [],',
+    '  "practiceSentences": [],',
+    '  "speakingTasks": [],',
+    '  "summary": ""',
+    "}",
+    "Rules:",
+    "- Scores must be integers from 0 to 100.",
+    "- commonMistakes must contain at least 3 items.",
+    "- suggestions must contain at least 3 items.",
+    "- practiceSentences must contain at least 5 English sentences.",
+    "- speakingTasks must contain at least 5 English speaking tasks.",
+    "- summary must be written in Chinese.",
   ].join("\n");
 }

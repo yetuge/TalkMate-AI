@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAiClient, aiConfig } from "@/lib/ai";
+import { parseJsonObject } from "@/lib/json";
 import { buildCorrectionPrompt } from "@/lib/prompts";
 import { getScenarioById } from "@/lib/scenarios";
 import type { Correction, ScoreBreakdown } from "@/lib/types";
@@ -39,24 +40,6 @@ function createFallbackCorrection(text: string): Correction {
   };
 }
 
-function extractJson(text: string) {
-  const trimmedText = text.trim();
-  const fencedMatch = trimmedText.match(/```(?:json)?\s*([\s\S]*?)```/i);
-
-  if (fencedMatch?.[1]) {
-    return fencedMatch[1].trim();
-  }
-
-  const firstBrace = trimmedText.indexOf("{");
-  const lastBrace = trimmedText.lastIndexOf("}");
-
-  if (firstBrace >= 0 && lastBrace > firstBrace) {
-    return trimmedText.slice(firstBrace, lastBrace + 1);
-  }
-
-  return trimmedText;
-}
-
 function isScoreBreakdown(value: unknown): value is ScoreBreakdown {
   return (
     typeof value === "object" &&
@@ -69,7 +52,7 @@ function isScoreBreakdown(value: unknown): value is ScoreBreakdown {
 }
 
 function parseCorrection(rawContent: string, originalText: string) {
-  const parsed = JSON.parse(extractJson(rawContent)) as Partial<Correction>;
+  const parsed = parseJsonObject<Correction>(rawContent);
   const scores = isScoreBreakdown(parsed.scores)
     ? parsed.scores
     : createFallbackCorrection(originalText).scores;

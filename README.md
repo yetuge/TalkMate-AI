@@ -29,6 +29,7 @@ https://github.com/yetuge/TalkMate-AI
 - Step 5：实现 Web Speech API 语音识别 Hook，已完成。
 - Step 6：实现 AI 对话 API，已完成。
 - Step 7：实现即时纠错 API，已完成。
+- Step 8：实现课后报告 API，已完成。
 
 详细记录见 [DEVELOPMENT_PROGRESS.md](./DEVELOPMENT_PROGRESS.md)。
 
@@ -53,15 +54,18 @@ http://localhost:3000
 /practice?scenario=job-interview
 /history
 /report/demo-session
+/api/chat
+/api/correction
+/api/report
 ```
 
 ## 当前可用流程
 
 ```text
-打开首页 -> 点击 Start Practice -> 选择场景 -> 进入练习页 -> 语音识别或手动输入 -> 发送文本 -> 获取 AI 英文回复 -> 查看即时纠错反馈
+打开首页 -> 点击 Start Practice -> 选择场景 -> 进入练习页 -> 语音识别或手动输入 -> 发送文本 -> 获取 AI 英文回复 -> 查看即时纠错反馈 -> 结束练习 -> 查看课后报告
 ```
 
-说明：当前练习页已经接入浏览器 Web Speech API 语音识别，并通过 `/api/chat` 调用 DeepSeek API 生成 AI 回复，通过 `/api/correction` 生成即时纠错反馈。
+说明：当前练习页已经接入浏览器 Web Speech API 语音识别，并通过 `/api/chat` 调用 DeepSeek API 生成 AI 回复，通过 `/api/correction` 生成即时纠错反馈，通过 `/api/report` 生成课后报告。报告暂存于 localStorage，Supabase 历史记录将在后续步骤接入。
 
 ## 环境变量
 
