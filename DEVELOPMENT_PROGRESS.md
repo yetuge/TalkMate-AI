@@ -20,9 +20,9 @@ TalkMate AI 是一个 Web 端 AI 英语口语陪练 MVP。目标用户流程如�
 
 ## 当前状态
 
-当前阶段：**Step 9 已完成**
+当前阶段：**Step 10 已完成**
 
-项目已经初始化为一个最小可运行的 Next.js 应用，完成基础场景数据、主要页面路由占位、首页与场景选择页、练习页基础 UI、浏览器语音识别 Hook、AI 对话 API、即时纠错 API、课后报告 API，并实现 Supabase 历史记录保存。
+项目已经初始化为一个最小可运行的 Next.js 应用，完成基础场景数据、主要页面路由占位、首页与场景选择页、练习页基础 UI、浏览器语音识别 Hook、AI 对话 API、即时纠错 API、课后报告 API、Supabase 历史记录保存，并实现历史记录页和报告详情读取。
 
 ## 已完成工作
 
@@ -191,6 +191,22 @@ TalkMate AI 是一个 Web 端 AI 英语口语陪练 MVP。目标用户流程如�
 - 练习页生成报告后会调用 `/api/sessions` 保存结果。
 - Supabase 未配置时，保存接口返回 `provider: "localStorage"`，主流程继续使用 localStorage 兜底。
 
+### Step 10：实现历史记录页和报告页
+
+状态：**已完成**
+
+已完成内容：
+
+- 新增 `components/HistoryView.tsx`。
+- 新增 `components/HistoryItem.tsx`。
+- `/history` 页面从占位页升级为历史记录列表。
+- 历史页优先读取 `/api/sessions` 返回的 Supabase 记录。
+- Supabase 未配置或本地演示时，历史页读取 localStorage 中的报告记录。
+- 历史记录按结束时间倒序展示。
+- 每条历史记录展示场景、日期、练习时长、总分和报告入口。
+- 扩展 `GET /api/sessions?id=...`，支持读取指定会话详情。
+- `/report/[sessionId]` 在 localStorage 找不到报告时，会尝试从 Supabase 读取报告详情。
+
 主要新增文件：
 
 ```text
@@ -238,6 +254,8 @@ components/ReportView.tsx
 lib/supabase.ts
 supabase/schema.sql
 app/api/sessions/route.ts
+components/HistoryView.tsx
+components/HistoryItem.tsx
 ```
 
 ## 验证记录
@@ -383,6 +401,19 @@ GET http://localhost:3000/api/sessions
 - 配置 Supabase 后，练习结束会写入 `practice_sessions`。
 - 聊天消息会写入 `practice_messages`。
 - 纠错记录会写入 `practice_corrections`。
+
+Step 10 页面验证重点：
+
+```text
+http://localhost:3000/history
+```
+
+需要确认：
+
+- 未配置 Supabase 时，完成练习后历史页能显示 localStorage 记录。
+- 配置 Supabase 后，历史页能显示 Supabase 记录。
+- 点击 `Report` 能进入 `/report/[sessionId]`。
+- 报告页能展示 localStorage 或 Supabase 中保存的报告详情。
 
 Step 7 API 验证重点：
 
@@ -547,7 +578,7 @@ supabase/
 
 ### Step 10：实现历史记录页和报告页
 
-状态：**未开始**
+状态：**已完成**
 
 目标：
 
@@ -622,6 +653,12 @@ feat: add learning report API
 feat: add Supabase session history
 ```
 
+建议第十个 PR 标题：
+
+```text
+feat: add history and saved report pages
+```
+
 建议第一个 PR 描述：
 
 ```text
@@ -645,4 +682,4 @@ feat: add Supabase session history
 
 ## 下一步
 
-完成 Step 9 PR 后，开始 **Step 10：实现历史记录页和报告页**。
+完成 Step 10 PR 后，开始 **Step 11：优化 UI、Loading、错误处理和空状态**。
