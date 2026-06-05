@@ -20,9 +20,9 @@ TalkMate AI 是一个 Web 端 AI 英语口语陪练 MVP。目标用户流程如�
 
 ## 当前状态
 
-当前阶段：**Step 1 已完成**
+当前阶段：**Step 2 已完成**
 
-项目已经初始化为一个最小可运行的 Next.js 应用。当前只完成项目骨架和基础依赖，尚未实现具体业务功能。
+项目已经初始化为一个最小可运行的 Next.js 应用，并完成基础场景数据和主要页面路由占位。完整页面 UI 和业务功能尚未开始。
 
 ## 已完成工作
 
@@ -41,6 +41,23 @@ TalkMate AI 是一个 Web 端 AI 英语口语陪练 MVP。目标用户流程如�
 - 添加环境变量示例文件。
 - 创建后续开发需要的基础目录，包括 `components`、`hooks`、`lib`、`supabase`。
 - 安装核心依赖。
+
+### Step 2：实现场景数据和页面路由
+
+状态：**已完成**
+
+已完成内容：
+
+- 在 `lib/types.ts` 中添加场景、消息、评分、纠错、报告和练习会话等共享类型。
+- 在 `lib/scenarios.ts` 中维护四个固定练习场景：
+  - Job Interview
+  - Restaurant Ordering
+  - Business Meeting
+  - Travel
+- 添加 `/scenarios` 页面路由占位，并从共享场景数据渲染场景列表。
+- 添加 `/practice` 页面路由占位，并读取 `scenario` 查询参数。
+- 添加 `/history` 页面路由占位。
+- 添加 `/report/[sessionId]` 动态报告页面路由占位。
 
 主要新增文件：
 
@@ -65,6 +82,12 @@ postcss.config.mjs
 tailwind.config.ts
 tsconfig.json
 README.md
+lib/types.ts
+lib/scenarios.ts
+app/scenarios/page.tsx
+app/practice/page.tsx
+app/history/page.tsx
+app/report/[sessionId]/page.tsx
 ```
 
 ## 验证记录
@@ -92,6 +115,15 @@ npm.cmd run dev -- -p 3000
 
 ```text
 http://localhost:3000
+```
+
+Step 2 路由验证地址：
+
+```text
+http://localhost:3000/scenarios
+http://localhost:3000/practice?scenario=job-interview
+http://localhost:3000/history
+http://localhost:3000/report/demo-session
 ```
 
 说明：当前受限环境中，开发服务器无法作为隐藏后台进程稳定保活，但前台启动已验证成功。
@@ -147,7 +179,7 @@ supabase/
 
 ### Step 2：实现场景数据和页面路由
 
-状态：**未开始**
+状态：**已完成**
 
 目标：
 
@@ -249,6 +281,12 @@ supabase/
 feat: initialize TalkMate AI project
 ```
 
+建议第二个 commit：
+
+```text
+feat: add scenario data and routes
+```
+
 建议第一个 PR 描述：
 
 ```text
@@ -272,4 +310,4 @@ feat: initialize TalkMate AI project
 
 ## 下一步
 
-开始 **Step 2：实现场景数据和页面路由**。
+开始 **Step 3：实现首页和场景选择页**。
