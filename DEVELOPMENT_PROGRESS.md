@@ -20,9 +20,9 @@ TalkMate AI 是一个 Web 端 AI 英语口语陪练 MVP。目标用户流程如�
 
 ## 当前状态
 
-当前阶段：**Step 5 已完成**
+当前阶段：**Step 6 已完成**
 
-项目已经初始化为一个最小可运行的 Next.js 应用，完成基础场景数据、主要页面路由占位、首页与场景选择页、练习页基础 UI，并接入浏览器语音识别 Hook。
+项目已经初始化为一个最小可运行的 Next.js 应用，完成基础场景数据、主要页面路由占位、首页与场景选择页、练习页基础 UI、浏览器语音识别 Hook，并实现 AI 对话 API。
 
 ## 已完成工作
 
@@ -113,6 +113,28 @@ TalkMate AI 是一个 Web 端 AI 英语口语陪练 MVP。目标用户流程如�
   - 当前浏览器不支持语音识别，请手动输入文本。
 - 麦克风权限拒绝、未检测到麦克风、无语音输入、网络错误等场景会显示可读错误提示。
 
+### Step 6：实现 AI 对话 API
+
+状态：**已完成**
+
+已完成内容：
+
+- 新增 `lib/ai.ts`，封装 DeepSeek OpenAI-compatible 客户端配置。
+- 新增 `lib/prompts.ts`，维护场景化英文对话 Prompt。
+- 新增 `app/api/chat/route.ts`。
+- `/api/chat` 支持接收当前场景和聊天消息。
+- AI 回复要求：
+  - 只使用英文。
+  - 每次回复 1 到 3 句话。
+  - 根据当前场景扮演对应角色。
+  - 推动用户继续口语表达。
+- 练习页发送消息后会调用 `/api/chat` 获取 AI 回复。
+- 未配置 `DEEPSEEK_API_KEY` 或接口调用失败时，会返回场景化兜底回复，保证演示流程可继续。
+- `.env.example` 新增 DeepSeek 相关环境变量：
+  - `DEEPSEEK_API_KEY`
+  - `DEEPSEEK_BASE_URL`
+  - `DEEPSEEK_MODEL`
+
 主要新增文件：
 
 ```text
@@ -150,6 +172,9 @@ components/VoiceRecorder.tsx
 components/LoadingDots.tsx
 hooks/useSpeechRecognition.ts
 lib/speech-recognition.d.ts
+lib/ai.ts
+lib/prompts.ts
+app/api/chat/route.ts
 ```
 
 ## 验证记录
@@ -229,6 +254,39 @@ http://localhost:3000/practice?scenario=job-interview
 - 文本框内容可以手动编辑。
 - 点击 `Send` 后，当前文本清空并进入练习页现有消息流程。
 - 如果浏览器不支持 Web Speech API，页面显示手动输入提示。
+
+Step 6 API 验证重点：
+
+```text
+POST http://localhost:3000/api/chat
+```
+
+请求示例：
+
+```json
+{
+  "scenario": "job-interview",
+  "messages": [
+    {
+      "id": "demo-user-message",
+      "role": "user",
+      "content": "I want to introduce myself.",
+      "createdAt": "2026-06-05T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+返回示例：
+
+```json
+{
+  "reply": "Sure. Please introduce yourself and tell me about your background.",
+  "provider": "deepseek"
+}
+```
+
+如果没有配置 DeepSeek API Key，`provider` 会返回 `fallback`。
 
 说明：当前受限环境中，开发服务器无法作为隐藏后台进程稳定保活，但前台启动已验证成功。
 
@@ -321,7 +379,7 @@ supabase/
 
 ### Step 6：实现 AI 对话 API
 
-状态：**未开始**
+状态：**已完成**
 
 目标：
 
@@ -409,6 +467,12 @@ feat: build practice page base UI
 feat: add speech recognition hook
 ```
 
+建议第六个 commit：
+
+```text
+feat: add AI chat API
+```
+
 建议第一个 PR 描述：
 
 ```text
@@ -432,4 +496,4 @@ feat: add speech recognition hook
 
 ## 下一步
 
-开始 **Step 6：实现 AI 对话 API**。
+开始 **Step 7：实现即时纠错 API**。

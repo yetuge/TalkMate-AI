@@ -50,6 +50,11 @@ function createMockFeedback(text: string): Correction {
   };
 }
 
+type ChatApiResponse = {
+  reply?: string;
+  error?: string;
+};
+
 export function PracticeRoom({ scenario }: PracticeRoomProps) {
   const openingMessage = useMemo(
     () => createMessage("assistant", scenario.openingQuestion),
@@ -70,23 +75,46 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
     stopRecording,
   } = useSpeechRecognition({ lang: "en-US" });
 
-  function handleSend() {
+  async function handleSend() {
     const text = transcript.trim();
 
     if (!text) {
       return;
     }
 
-    setMessages((currentMessages) => [
-      ...currentMessages,
-      createMessage("user", text),
-    ]);
+    stopRecording();
+
+    const userMessage = createMessage("user", text);
+    const nextMessages = [...messages, userMessage];
+
+    setMessages(nextMessages);
     resetTranscript();
     setCurrentFeedback(createMockFeedback(text));
     setIsLoading(true);
     setIsSpeaking(false);
 
-    window.setTimeout(() => {
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          scenario: scenario.id,
+          messages: nextMessages,
+        }),
+      });
+      const data = (await response.json()) as ChatApiResponse;
+      const reply =
+        data.reply ??
+        "Good answer. Can you add one more detail to make it sound more natural?";
+
+      setMessages((currentMessages) => [
+        ...currentMessages,
+        createMessage("assistant", reply),
+      ]);
+      setIsSpeaking(true);
+    } catch {
       setMessages((currentMessages) => [
         ...currentMessages,
         createMessage(
@@ -94,13 +122,13 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
           "Good answer. Can you add one more detail to make it sound more natural?",
         ),
       ]);
-      setIsLoading(false);
       setIsSpeaking(true);
-    }, 700);
-
-    window.setTimeout(() => {
-      setIsSpeaking(false);
-    }, 2200);
+    } finally {
+      setIsLoading(false);
+      window.setTimeout(() => {
+        setIsSpeaking(false);
+      }, 2200);
+    }
   }
 
   function handleEndPractice() {
@@ -179,6 +207,7 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
             <VoiceRecorder
               transcript={transcript}
               isRecording={isRecording}
+              isSending={isLoading}
               isSpeechSupported={isSpeechSupported}
               speechError={speechError}
               onTranscriptChange={setTranscript}
