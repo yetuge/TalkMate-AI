@@ -1,4 +1,5 @@
-import { AlertCircle, Mic, Send, Square, Type, XCircle } from "lucide-react";
+import { Mic, Send, Square, Type, XCircle } from "lucide-react";
+import { StatusNotice } from "@/components/StatusNotice";
 
 type VoiceRecorderProps = {
   transcript: string;
@@ -86,15 +87,20 @@ export function VoiceRecorder({
         </div>
       </div>
       {speechError ? (
-        <div className="mt-3 flex gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-          <p>{speechError}</p>
-        </div>
+        <StatusNotice
+          className="mt-3"
+          title="Speech recognition issue"
+          description={speechError}
+          tone="error"
+        />
       ) : null}
       {!isSpeechSupported ? (
-        <p className="mt-3 text-sm text-muted-foreground">
-          当前浏览器不支持语音识别，请手动输入文本。
-        </p>
+        <StatusNotice
+          className="mt-3"
+          title="Manual input available"
+          description="当前浏览器不支持语音识别，请手动输入文本。"
+          tone="warning"
+        />
       ) : null}
     </section>
   );

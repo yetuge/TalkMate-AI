@@ -13,6 +13,7 @@ import {
 import { ChatMessage } from "@/components/ChatMessage";
 import { FeedbackPanel } from "@/components/FeedbackPanel";
 import { LoadingDots } from "@/components/LoadingDots";
+import { StatusNotice } from "@/components/StatusNotice";
 import { VoiceRecorder } from "@/components/VoiceRecorder";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import type {
@@ -83,6 +84,8 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isEnding, setIsEnding] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [currentFeedback, setCurrentFeedback] = useState<Correction>();
   const {
     transcript,
@@ -112,6 +115,8 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
     setCurrentFeedback(undefined);
     setIsLoading(true);
     setIsSpeaking(false);
+    setStatusMessage(null);
+    setErrorMessage(null);
 
     try {
       const [chatResponse, correctionResponse] = await Promise.all([
@@ -160,6 +165,11 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
         ...currentCorrections,
         correction,
       ]);
+      if (!chatData.reply || correctionData.error) {
+        setStatusMessage(
+          "Some AI services used a fallback response, but your practice flow is still saved.",
+        );
+      }
       setIsSpeaking(true);
     } catch {
       const fallbackCorrection = createMockFeedback(text);
@@ -176,6 +186,9 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
         ...currentCorrections,
         fallbackCorrection,
       ]);
+      setErrorMessage(
+        "The AI service was unavailable, so TalkMate used a local fallback response.",
+      );
       setIsSpeaking(true);
     } finally {
       setIsLoading(false);
@@ -191,6 +204,8 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
     }
 
     setIsEnding(true);
+    setStatusMessage("Generating your learning report and saving this session.");
+    setErrorMessage(null);
 
     try {
       const durationSeconds = Math.max(
@@ -239,6 +254,12 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
       const savedSession = (await saveResponse.json()) as SaveSessionApiResponse;
       const sessionId = savedSession.id ?? localSessionId;
 
+      if (savedSession.provider === "localStorage") {
+        setStatusMessage(
+          "Supabase is not configured, so this report is saved locally in your browser.",
+        );
+      }
+
       if (sessionId !== localSessionId) {
         window.localStorage.setItem(
           `talkmate-report-${sessionId}`,
@@ -251,7 +272,8 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
 
       router.push(`/report/${sessionId}`);
     } catch {
-      window.alert("Report generation failed. Please try again.");
+      setErrorMessage("Report generation failed. Please try again.");
+      setStatusMessage(null);
       setIsEnding(false);
     }
   }
@@ -325,6 +347,29 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
           </div>
 
           <div className="border-t p-4">
+            <div className="mb-3 space-y-3">
+              {isEnding ? (
+                <StatusNotice
+                  title="Preparing report"
+                  description="Generating your learning report and saving the session."
+                  tone="loading"
+                />
+              ) : null}
+              {statusMessage && !isEnding ? (
+                <StatusNotice
+                  title="Practice flow continued"
+                  description={statusMessage}
+                  tone="info"
+                />
+              ) : null}
+              {errorMessage ? (
+                <StatusNotice
+                  title="Fallback mode active"
+                  description={errorMessage}
+                  tone="warning"
+                />
+              ) : null}
+            </div>
             <VoiceRecorder
               transcript={transcript}
               isRecording={isRecording}
@@ -341,7 +386,7 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
           </div>
         </section>
 
-        <FeedbackPanel feedback={currentFeedback} />
+        <FeedbackPanel feedback={currentFeedback} isLoading={isLoading} />
       </div>
     </main>
   );

@@ -1,8 +1,10 @@
 import { Lightbulb, Sparkles } from "lucide-react";
+import { LoadingDots } from "@/components/LoadingDots";
 import type { Correction } from "@/lib/types";
 
 type FeedbackPanelProps = {
   feedback?: Correction;
+  isLoading?: boolean;
 };
 
 const scoreLabels = {
@@ -12,7 +14,28 @@ const scoreLabels = {
   pronunciation: "Pronunciation",
 };
 
-export function FeedbackPanel({ feedback }: FeedbackPanelProps) {
+export function FeedbackPanel({ feedback, isLoading = false }: FeedbackPanelProps) {
+  if (isLoading) {
+    return (
+      <aside className="flex h-full flex-col rounded-lg border bg-card p-5 text-card-foreground shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <Sparkles className="h-5 w-5" aria-hidden="true" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold">Analyzing</h2>
+            <p className="text-sm text-muted-foreground">
+              Checking your grammar, fluency, vocabulary, and pronunciation
+            </p>
+          </div>
+        </div>
+        <div className="mt-6 rounded-lg border bg-muted/50 p-4 text-sm leading-6 text-muted-foreground">
+          Instant feedback is being prepared <LoadingDots className="ml-1" />
+        </div>
+      </aside>
+    );
+  }
+
   if (!feedback) {
     return (
       <aside className="flex h-full flex-col rounded-lg border bg-card p-5 text-card-foreground shadow-sm">

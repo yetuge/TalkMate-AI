@@ -2,11 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ClipboardList, Loader2, Plus } from "lucide-react";
+import { ArrowLeft, ClipboardList, Plus } from "lucide-react";
 import {
   HistoryItem,
   type HistorySessionSummary,
 } from "@/components/HistoryItem";
+import { StatusNotice } from "@/components/StatusNotice";
 import type { PracticeReport, ScenarioId } from "@/lib/types";
 
 type SessionsApiResponse = {
@@ -69,6 +70,7 @@ export function HistoryView() {
   const [provider, setProvider] = useState<"supabase" | "localStorage">(
     "localStorage",
   );
+  const [notice, setNotice] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -86,6 +88,11 @@ export function HistoryView() {
         setProvider(data.provider ?? "localStorage");
         setRemoteSessions(data.sessions ?? []);
         setLocalSessions(readLocalSessions());
+        setNotice(
+          data.provider === "localStorage"
+            ? "Supabase is not configured, so local browser reports are shown."
+            : null,
+        );
       } catch {
         if (!isMounted) {
           return;
@@ -93,6 +100,9 @@ export function HistoryView() {
 
         setProvider("localStorage");
         setLocalSessions(readLocalSessions());
+        setNotice(
+          "History API was unavailable, so TalkMate is showing local browser reports.",
+        );
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -151,10 +161,15 @@ export function HistoryView() {
 
         <div className="mt-5 space-y-4">
           {isLoading ? (
-            <div className="flex items-center gap-3 rounded-lg border bg-card p-5 text-muted-foreground shadow-sm">
-              <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
-              Loading practice history
-            </div>
+            <StatusNotice title="Loading practice history" tone="loading" />
+          ) : null}
+
+          {!isLoading && notice ? (
+            <StatusNotice
+              title="Local fallback active"
+              description={notice}
+              tone="info"
+            />
           ) : null}
 
           {!isLoading && sessions.length === 0 ? (
