@@ -20,9 +20,9 @@ TalkMate AI 是一个 Web 端 AI 英语口语陪练 MVP。目标用户流程如�
 
 ## 当前状态
 
-当前阶段：**Step 13 已完成**
+当前阶段：**Step 14 已完成**
 
-项目已经初始化为一个最小可运行的 Next.js 应用，完成基础场景数据、主要页面路由占位、首页与场景选择页、练习页基础 UI、浏览器语音识别 Hook、AI 对话 API、即时纠错 API、课后报告 API、Supabase 历史记录保存、历史记录页和报告详情读取，并优化 UI 状态展示、AI 回复流式输出和中文界面文案。
+项目已经初始化为一个最小可运行的 Next.js 应用，完成基础场景数据、主要页面路由占位、首页与场景选择页、练习页基础 UI、浏览器语音识别 Hook、AI 对话 API、即时纠错 API、课后报告 API、Supabase 历史记录保存、历史记录页和报告详情读取，并优化 UI 状态展示、AI 回复流式输出、中文界面文案和流式渲染节奏。
 
 ## 已完成工作
 
@@ -249,6 +249,19 @@ TalkMate AI 是一个 Web 端 AI 英语口语陪练 MVP。目标用户流程如�
 - 历史记录和报告页使用中文场景名展示旧记录和 Supabase 记录。
 - 纠错 Prompt 调整为中文解释错误原因，报告 Prompt 调整为中文输出常见问题、建议和口语任务。
 - 本地 fallback 纠错和报告内容同步中文化，未配置 AI 服务时仍便于演示。
+
+### Step 14：优化 SSE 流式回复的前端双缓冲渲染
+
+状态：**已完成**
+
+已完成内容：
+
+- 在练习页 SSE 读取逻辑中明确区分 `sseBuffer` 和 `renderBuffer`。
+- `sseBuffer` 负责拼接网络 chunk，确保只解析完整的 SSE 消息。
+- SSE token 解析完成后写入 `renderBuffer`，不再每个 token 都立即触发 React 状态更新。
+- 使用固定间隔 timer 批量 flush 缓冲内容到同一条 AI 回复气泡。
+- SSE 流结束或读取退出时强制 flush 剩余内容，避免最后一段回复丢失。
+- 保持 `/api/chat/stream` 后端接口不变，只优化前端网络读取和 UI 渲染节奏。
 
 主要新增文件：
 
@@ -521,6 +534,20 @@ http://localhost:3000/history
 - 英文对话内容、AI 回复、纠错后的英文句子和练习句子仍保持英文。
 - 语音识别错误、fallback 提示和空状态提示显示为中文。
 
+Step 14 页面验证重点：
+
+```text
+http://localhost:3000/practice?scenario=job-interview
+```
+
+需要确认：
+
+- 输入英文句子并点击发送后，AI 回复仍然流式显示。
+- 网络 chunk 被正确拼接为完整 SSE 消息，token 内容不丢失、不截断。
+- 回复输出节奏更加平滑，没有因为 token 过碎导致明显卡顿。
+- SSE 流结束后最后一段文本完整显示。
+- 即时纠错面板仍能正常生成反馈。
+
 Step 7 API 验证重点：
 
 ```text
@@ -722,6 +749,17 @@ supabase/
 - 中文化主要页面标题、按钮、状态提示和报告栏目。
 - 保留英文练习内容，避免影响英语口语训练。
 
+### Step 14：优化 SSE 流式回复的前端双缓冲渲染
+
+状态：**已完成**
+
+目标：
+
+- 解耦网络 chunk 到达、SSE 消息解析和 React 渲染节奏。
+- 确保前端只处理完整 SSE 消息。
+- 减少流式回复时的高频状态更新。
+- 保持用户看到的流式输出更加平滑自然。
+
 ## 建议提交计划
 
 为了满足比赛要求中的持续开发记录，建议每个 Step 单独提交，并尽量对应单独 PR。
@@ -804,6 +842,12 @@ feat: stream AI chat responses with SSE
 feat: localize main UI text to Chinese
 ```
 
+建议第十四个 PR 标题：
+
+```text
+feat: buffer streamed chat rendering
+```
+
 建议第一个 PR 描述：
 
 ```text
@@ -827,4 +871,4 @@ feat: localize main UI text to Chinese
 
 ## 下一步
 
-完成 Step 13 PR 后，继续拆分 README、Demo 指南和最终 polish PR。
+完成 Step 14 PR 后，继续拆分 README、Demo 指南和最终 polish PR。
