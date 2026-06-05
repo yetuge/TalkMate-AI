@@ -20,7 +20,7 @@ export default function ScenariosPage() {
             href="/history"
           >
             <History className="h-4 w-4" aria-hidden="true" />
-            History
+            历史记录
           </Link>
         </nav>
 
@@ -28,10 +28,10 @@ export default function ScenariosPage() {
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border bg-card px-4 py-2 text-sm font-semibold text-primary shadow-sm">
               <Sparkles className="h-4 w-4" aria-hidden="true" />
-              Choose a speaking mission
+              选择练习场景
             </div>
             <h1 className="mt-6 text-4xl font-black leading-tight sm:text-6xl">
-              Practice English in a real situation.
+              在真实场景中练英语。
             </h1>
           </div>
 
@@ -41,10 +41,9 @@ export default function ScenariosPage() {
                 <Clock3 className="h-5 w-5" aria-hidden="true" />
               </div>
               <div>
-                <h2 className="text-lg font-bold">Focused practice flow</h2>
+                <h2 className="text-lg font-bold">专注练习流程</h2>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  Each session starts with a realistic opening question, then
-                  moves into short English turns and focused feedback.
+                  每次练习从一个真实开场问题开始，随后进入简短英文对话，并获得针对性的即时反馈。
                 </p>
               </div>
             </div>

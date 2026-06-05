@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { Scenario, ScenarioId } from "@/lib/types";
+import { difficultyLabels, getScenarioLabel } from "@/lib/labels";
 import { cn } from "@/lib/utils";
 
 const scenarioIcons: Record<ScenarioId, LucideIcon> = {
@@ -29,6 +30,7 @@ type ScenarioCardProps = {
 
 export function ScenarioCard({ scenario }: ScenarioCardProps) {
   const Icon = scenarioIcons[scenario.id];
+  const label = getScenarioLabel(scenario.id);
 
   return (
     <Link
@@ -45,26 +47,26 @@ export function ScenarioCard({ scenario }: ScenarioCardProps) {
             difficultyStyles[scenario.difficulty],
           )}
         >
-          {scenario.difficulty}
+          {difficultyLabels[scenario.difficulty]}
         </span>
       </div>
 
       <div className="mt-5">
-        <h2 className="text-2xl font-bold">{scenario.title}</h2>
+        <h2 className="text-2xl font-bold">{label.title}</h2>
         <p className="mt-3 min-h-[72px] text-sm leading-6 text-muted-foreground">
-          {scenario.description}
+          {label.description}
         </p>
       </div>
 
       <div className="mt-5 rounded-lg border bg-muted/50 p-4">
         <p className="text-xs font-semibold uppercase text-muted-foreground">
-          Opening Question
+          开场问题
         </p>
         <p className="mt-2 text-sm font-medium">{scenario.openingQuestion}</p>
       </div>
 
       <ul className="mt-5 flex flex-1 flex-col gap-2">
-        {scenario.goals.slice(0, 3).map((goal) => (
+        {label.goals.slice(0, 3).map((goal) => (
           <li className="flex gap-2 text-sm text-muted-foreground" key={goal}>
             <CheckCircle2
               className="mt-0.5 h-4 w-4 shrink-0 text-secondary"
@@ -76,7 +78,7 @@ export function ScenarioCard({ scenario }: ScenarioCardProps) {
       </ul>
 
       <span className="mt-6 inline-flex items-center text-sm font-semibold text-primary">
-        Start practice
+        开始练习
         <span className="ml-2 transition group-hover:translate-x-1" aria-hidden="true">
           -&gt;
         </span>
