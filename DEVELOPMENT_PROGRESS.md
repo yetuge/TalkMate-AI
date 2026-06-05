@@ -20,9 +20,9 @@ TalkMate AI 是一个 Web 端 AI 英语口语陪练 MVP。目标用户流程如�
 
 ## 当前状态
 
-当前阶段：**Step 4 已完成**
+当前阶段：**Step 5 已完成**
 
-项目已经初始化为一个最小可运行的 Next.js 应用，完成基础场景数据、主要页面路由占位、首页与场景选择页，并实现练习页基础 UI。
+项目已经初始化为一个最小可运行的 Next.js 应用，完成基础场景数据、主要页面路由占位、首页与场景选择页、练习页基础 UI，并接入浏览器语音识别 Hook。
 
 ## 已完成工作
 
@@ -96,6 +96,23 @@ TalkMate AI 是一个 Web 端 AI 英语口语陪练 MVP。目标用户流程如�
 - 底部控制区包含开始录音、停止录音、当前识别文本、发送、结束练习按钮。
 - 目前发送消息使用本地 UI 模拟反馈和 AI 回复，真实语音识别与 AI API 将在后续步骤接入。
 
+### Step 5：实现 Web Speech API 语音识别 Hook
+
+状态：**已完成**
+
+已完成内容：
+
+- 新增 `hooks/useSpeechRecognition.ts`。
+- 新增 `lib/speech-recognition.d.ts`，为浏览器 SpeechRecognition API 添加 TypeScript 声明。
+- 支持 Chrome/Edge 常用的 `webkitSpeechRecognition`。
+- 支持开始录音和停止录音。
+- 支持实时显示识别中的文本。
+- 用户可以手动编辑识别文本。
+- 点击发送后会清空当前文本。
+- 浏览器不支持 Web Speech API 时显示提示：
+  - 当前浏览器不支持语音识别，请手动输入文本。
+- 麦克风权限拒绝、未检测到麦克风、无语音输入、网络错误等场景会显示可读错误提示。
+
 主要新增文件：
 
 ```text
@@ -131,6 +148,8 @@ components/ChatMessage.tsx
 components/FeedbackPanel.tsx
 components/VoiceRecorder.tsx
 components/LoadingDots.tsx
+hooks/useSpeechRecognition.ts
+lib/speech-recognition.d.ts
 ```
 
 ## 验证记录
@@ -195,6 +214,21 @@ http://localhost:3000/practice?scenario=job-interview
 - 页面右侧/下方显示即时反馈区域。
 - 底部显示录音、文本输入、发送和结束练习控制。
 - 输入英文句子并点击 `Send` 后，聊天区会新增用户消息、模拟 AI 回复和反馈内容。
+
+Step 5 页面验证重点：
+
+```text
+http://localhost:3000/practice?scenario=job-interview
+```
+
+需要确认：
+
+- 点击录音按钮后，浏览器请求麦克风权限。
+- 说英文时，文本框实时显示识别结果。
+- 点击停止按钮后，语音识别结束。
+- 文本框内容可以手动编辑。
+- 点击 `Send` 后，当前文本清空并进入练习页现有消息流程。
+- 如果浏览器不支持 Web Speech API，页面显示手动输入提示。
 
 说明：当前受限环境中，开发服务器无法作为隐藏后台进程稳定保活，但前台启动已验证成功。
 
@@ -278,7 +312,7 @@ supabase/
 
 ### Step 5：实现 Web Speech API 语音识别 Hook
 
-状态：**未开始**
+状态：**已完成**
 
 目标：
 
@@ -369,6 +403,12 @@ feat: build home and scenario selection pages
 feat: build practice page base UI
 ```
 
+建议第五个 commit：
+
+```text
+feat: add speech recognition hook
+```
+
 建议第一个 PR 描述：
 
 ```text
@@ -392,4 +432,4 @@ feat: build practice page base UI
 
 ## 下一步
 
-开始 **Step 5：实现 Web Speech API 语音识别 Hook**。
+开始 **Step 6：实现 AI 对话 API**。

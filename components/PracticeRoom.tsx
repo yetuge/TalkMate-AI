@@ -13,6 +13,7 @@ import { ChatMessage } from "@/components/ChatMessage";
 import { FeedbackPanel } from "@/components/FeedbackPanel";
 import { LoadingDots } from "@/components/LoadingDots";
 import { VoiceRecorder } from "@/components/VoiceRecorder";
+import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import type {
   ChatMessage as ChatMessageType,
   Correction,
@@ -55,19 +56,19 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
     [scenario.openingQuestion],
   );
   const [messages, setMessages] = useState<ChatMessageType[]>([openingMessage]);
-  const [transcript, setTranscript] = useState("");
-  const [isRecording, setIsRecording] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [currentFeedback, setCurrentFeedback] = useState<Correction>();
-
-  function handleStartRecording() {
-    setIsRecording(true);
-  }
-
-  function handleStopRecording() {
-    setIsRecording(false);
-  }
+  const {
+    transcript,
+    isRecording,
+    isSupported: isSpeechSupported,
+    error: speechError,
+    setTranscript,
+    resetTranscript,
+    startRecording,
+    stopRecording,
+  } = useSpeechRecognition({ lang: "en-US" });
 
   function handleSend() {
     const text = transcript.trim();
@@ -80,7 +81,7 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
       ...currentMessages,
       createMessage("user", text),
     ]);
-    setTranscript("");
+    resetTranscript();
     setCurrentFeedback(createMockFeedback(text));
     setIsLoading(true);
     setIsSpeaking(false);
@@ -178,9 +179,11 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
             <VoiceRecorder
               transcript={transcript}
               isRecording={isRecording}
+              isSpeechSupported={isSpeechSupported}
+              speechError={speechError}
               onTranscriptChange={setTranscript}
-              onStartRecording={handleStartRecording}
-              onStopRecording={handleStopRecording}
+              onStartRecording={startRecording}
+              onStopRecording={stopRecording}
               onSend={handleSend}
               onEndPractice={handleEndPractice}
             />
