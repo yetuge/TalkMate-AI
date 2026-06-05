@@ -1,4 +1,5 @@
 import { Bot, UserRound } from "lucide-react";
+import { LoadingDots } from "@/components/LoadingDots";
 import type { ChatMessage as ChatMessageType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -46,7 +47,13 @@ export function ChatMessage({ message }: ChatMessageProps) {
         >
           {isUser ? "You" : "TalkMate AI"}
         </p>
-        <p className="mt-1 text-sm leading-6">{message.content}</p>
+        {message.content ? (
+          <p className="mt-1 text-sm leading-6">{message.content}</p>
+        ) : (
+          <p className="mt-1 inline-flex h-6 items-center text-sm leading-6 text-muted-foreground">
+            <LoadingDots />
+          </p>
+        )}
         <time
           className={cn(
             "mt-2 block text-xs",

@@ -1,49 +1,14 @@
 import { NextResponse } from "next/server";
-import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 import { createAiClient, aiConfig } from "@/lib/ai";
-import { buildChatSystemPrompt, formatMessagesForPrompt } from "@/lib/prompts";
+import {
+  buildAiChatMessages,
+  fallbackChatReply,
+  isValidChatMessages,
+  type ChatRequestBody,
+} from "@/lib/chat";
 import { getScenarioById } from "@/lib/scenarios";
-import type { ChatMessage } from "@/lib/types";
 
 export const runtime = "nodejs";
-
-type ChatRequestBody = {
-  scenario?: string;
-  messages?: ChatMessage[];
-};
-
-function fallbackReply(scenarioTitle: string) {
-  const replies = {
-    "Job Interview":
-      "Good start. Could you share one specific project and explain your role in it?",
-    "Restaurant Ordering":
-      "Sure. Would you like anything to drink with your order?",
-    "Business Meeting":
-      "That makes sense. What risk do you think we should discuss first?",
-    Travel:
-      "Of course. Could you tell me where you want to go first?",
-  };
-
-  return (
-    replies[scenarioTitle as keyof typeof replies] ??
-    "Good answer. Can you add one more detail?"
-  );
-}
-
-function isValidMessages(messages: unknown): messages is ChatMessage[] {
-  return (
-    Array.isArray(messages) &&
-    messages.every(
-      (message) =>
-        typeof message === "object" &&
-        message !== null &&
-        "role" in message &&
-        "content" in message &&
-        typeof message.content === "string" &&
-        (message.role === "user" || message.role === "assistant"),
-    )
-  );
-}
 
 export async function POST(request: Request) {
   let body: ChatRequestBody;
@@ -66,7 +31,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!isValidMessages(body.messages)) {
+  if (!isValidChatMessages(body.messages)) {
     return NextResponse.json(
       { error: "Messages must be user or assistant chat messages." },
       { status: 400 },
@@ -77,18 +42,12 @@ export async function POST(request: Request) {
 
   if (!ai) {
     return NextResponse.json({
-      reply: fallbackReply(scenario.title),
+      reply: fallbackChatReply(scenario.title),
       provider: "fallback",
     });
   }
 
-  const messages: ChatCompletionMessageParam[] = [
-    {
-      role: "system",
-      content: buildChatSystemPrompt(scenario),
-    },
-    ...formatMessagesForPrompt(body.messages),
-  ];
+  const messages = buildAiChatMessages(scenario, body.messages);
 
   try {
     const completion = await ai.chat.completions.create({
@@ -102,7 +61,7 @@ export async function POST(request: Request) {
 
     if (!reply) {
       return NextResponse.json({
-        reply: fallbackReply(scenario.title),
+        reply: fallbackChatReply(scenario.title),
         provider: "fallback",
       });
     }
@@ -115,7 +74,7 @@ export async function POST(request: Request) {
     console.error("Chat API failed", error);
 
     return NextResponse.json({
-      reply: fallbackReply(scenario.title),
+      reply: fallbackChatReply(scenario.title),
       provider: "fallback",
     });
   }
