@@ -18,7 +18,7 @@ https://github.com/yetuge/TalkMate-AI
 - TailwindCSS
 - shadcn/ui
 - Supabase
-- OpenAI API
+- DeepSeek API
 
 ## 当前进度
 
@@ -60,14 +60,13 @@ http://localhost:3000
 打开首页 -> 点击 Start Practice -> 选择场景 -> 进入练习页 -> 语音识别或手动输入 -> 发送文本 -> 获取 AI 英文回复 -> 查看模拟即时反馈
 ```
 
-说明：当前练习页已经接入浏览器 Web Speech API 语音识别，并通过 `/api/chat` 调用 DeepSeek OpenAI-compatible API 生成 AI 回复。纠错反馈仍使用本地 UI 模拟，真实纠错 API 将在后续步骤接入。
+说明：当前练习页已经接入浏览器 Web Speech API 语音识别，并通过 `/api/chat` 调用 DeepSeek API 生成 AI 回复。纠错反馈仍使用本地 UI 模拟，真实纠错 API 将在后续步骤接入。
 
 ## 环境变量
 
 复制 `.env.example` 为 `.env.local`，并按需填写：
 
 ```text
-OPENAI_API_KEY=
 DEEPSEEK_API_KEY=
 DEEPSEEK_BASE_URL=https://api.deepseek.com
 DEEPSEEK_MODEL=deepseek-v4-flash

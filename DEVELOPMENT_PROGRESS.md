@@ -16,7 +16,7 @@ TalkMate AI 是一个 Web 端 AI 英语口语陪练 MVP。目标用户流程如�
 - TailwindCSS
 - shadcn/ui
 - Supabase
-- OpenAI API
+- DeepSeek API
 
 ## 当前状态
 
@@ -119,7 +119,7 @@ TalkMate AI 是一个 Web 端 AI 英语口语陪练 MVP。目标用户流程如�
 
 已完成内容：
 
-- 新增 `lib/ai.ts`，封装 DeepSeek OpenAI-compatible 客户端配置。
+- 新增 `lib/ai.ts`，封装 DeepSeek API 客户端配置。
 - 新增 `lib/prompts.ts`，维护场景化英文对话 Prompt。
 - 新增 `app/api/chat/route.ts`。
 - `/api/chat` 支持接收当前场景和聊天消息。
