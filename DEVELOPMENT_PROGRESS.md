@@ -20,9 +20,9 @@ TalkMate AI 是一个 Web 端 AI 英语口语陪练 MVP。目标用户流程如�
 
 ## 当前状态
 
-当前阶段：**Step 11 已完成**
+当前阶段：**Step 12 已完成**
 
-项目已经初始化为一个最小可运行的 Next.js 应用，完成基础场景数据、主要页面路由占位、首页与场景选择页、练习页基础 UI、浏览器语音识别 Hook、AI 对话 API、即时纠错 API、课后报告 API、Supabase 历史记录保存、历史记录页和报告详情读取，并优化 UI 状态展示。
+项目已经初始化为一个最小可运行的 Next.js 应用，完成基础场景数据、主要页面路由占位、首页与场景选择页、练习页基础 UI、浏览器语音识别 Hook、AI 对话 API、即时纠错 API、课后报告 API、Supabase 历史记录保存、历史记录页和报告详情读取，并优化 UI 状态展示和 AI 回复流式输出。
 
 ## 已完成工作
 
@@ -221,6 +221,21 @@ TalkMate AI 是一个 Web 端 AI 英语口语陪练 MVP。目标用户流程如�
 - 历史页加载状态、localStorage fallback 状态和空状态展示更清晰。
 - 报告页加载状态和未找到状态展示更清晰。
 
+### Step 12：实现 SSE 流式 AI 回复
+
+状态：**已完成**
+
+已完成内容：
+
+- 新增 `app/api/chat/stream/route.ts`。
+- 新增 `lib/chat.ts`，复用聊天消息校验、场景化 fallback 回复和 AI 消息构建逻辑。
+- `/api/chat/stream` 使用 `text/event-stream` 返回 token、done 和 error 事件。
+- 配置 DeepSeek API 时，服务端通过 OpenAI-compatible streaming 接收模型增量输出。
+- 未配置 DeepSeek API 或流式请求失败时，接口会输出场景化 fallback 回复，保证演示流程不中断。
+- 练习页发送消息后会立即创建一条 TalkMate AI 回复气泡，并随着 SSE token 到达逐步填充内容。
+- 即时纠错请求继续与 AI 流式回复并行执行。
+- 空的 AI 回复气泡会显示 loading dots，避免等待期间页面无反馈。
+
 主要新增文件：
 
 ```text
@@ -261,9 +276,11 @@ lib/speech-recognition.d.ts
 lib/ai.ts
 lib/prompts.ts
 app/api/chat/route.ts
+app/api/chat/stream/route.ts
 app/api/correction/route.ts
 app/api/report/route.ts
 lib/json.ts
+lib/chat.ts
 components/ReportView.tsx
 lib/supabase.ts
 supabase/schema.sql
@@ -445,6 +462,35 @@ http://localhost:3000/report/demo-session
 - 历史页加载、空状态和 localStorage fallback 状态正常显示。
 - 报告页加载和未找到状态正常显示。
 
+Step 12 页面验证重点：
+
+```text
+http://localhost:3000/practice?scenario=job-interview
+```
+
+需要确认：
+
+- 输入英文句子并点击 `Send` 后，聊天区立即出现 TalkMate AI 回复气泡。
+- AI 回复内容会逐步输出，而不是等待完整回复后一次性出现。
+- 右侧即时纠错面板仍会正常显示本轮反馈。
+- 未配置 DeepSeek API 时，页面仍能通过 fallback 流式回复继续演示。
+
+Step 12 API 验证重点：
+
+```text
+POST http://localhost:3000/api/chat/stream
+```
+
+返回格式为 SSE：
+
+```text
+event: token
+data: {"token":"Good "}
+
+event: done
+data: {"provider":"deepseek"}
+```
+
 Step 7 API 验证重点：
 
 ```text
@@ -494,6 +540,7 @@ app/
   report/[sessionId]/page.tsx
   history/page.tsx
   api/chat/route.ts
+  api/chat/stream/route.ts
   api/correction/route.ts
   api/report/route.ts
   api/sessions/route.ts
@@ -625,6 +672,16 @@ supabase/
 - 补齐加载状态、空状态和错误提示。
 - 为最终 Demo 录制做准备。
 
+### Step 12：实现 SSE 流式 AI 回复
+
+状态：**已完成**
+
+目标：
+
+- 新增流式对话 API。
+- 让练习页 AI 回复逐步显示。
+- 保留即时纠错并行请求和 fallback 演示能力。
+
 ## 建议提交计划
 
 为了满足比赛要求中的持续开发记录，建议每个 Step 单独提交，并尽量对应单独 PR。
@@ -695,6 +752,12 @@ feat: add history and saved report pages
 feat: improve UI loading and error states
 ```
 
+建议第十二个 PR 标题：
+
+```text
+feat: stream AI chat responses with SSE
+```
+
 建议第一个 PR 描述：
 
 ```text
@@ -718,4 +781,4 @@ feat: improve UI loading and error states
 
 ## 下一步
 
-完成 Step 11 PR 后，继续拆分 README、Demo 指南和最终 polish PR。
+完成 Step 12 PR 后，继续拆分 README、Demo 指南和最终 polish PR。
