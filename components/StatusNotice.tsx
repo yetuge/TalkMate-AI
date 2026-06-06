@@ -5,6 +5,7 @@ import {
   Info,
   Loader2,
   TriangleAlert,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -15,6 +16,7 @@ type StatusNoticeProps = {
   description?: string;
   tone?: StatusNoticeTone;
   className?: string;
+  onDismiss?: () => void;
 };
 
 const toneStyles: Record<
@@ -57,6 +59,7 @@ export function StatusNotice({
   description,
   tone = "info",
   className,
+  onDismiss,
 }: StatusNoticeProps) {
   const styles = toneStyles[tone];
   const Icon = styles.icon;
@@ -73,12 +76,23 @@ export function StatusNotice({
         className={cn("mt-0.5 h-4 w-4 shrink-0", styles.iconClassName)}
         aria-hidden="true"
       />
-      <div>
+      <div className="min-w-0 flex-1">
         <p className="font-bold">{title}</p>
         {description ? (
           <p className="mt-1 leading-6 text-muted-foreground">{description}</p>
         ) : null}
       </div>
+      {onDismiss ? (
+        <button
+          aria-label="关闭提示"
+          className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-current transition hover:bg-background/60 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          onClick={onDismiss}
+          title="关闭提示"
+          type="button"
+        >
+          <X className="h-4 w-4" aria-hidden="true" />
+        </button>
+      ) : null}
     </div>
   );
 }

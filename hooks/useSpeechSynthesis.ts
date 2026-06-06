@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type UseSpeechSynthesisOptions = {
   lang?: string;
@@ -31,17 +31,35 @@ export function useSpeechSynthesis({
   rate = 0.95,
   pitch = 1,
 }: UseSpeechSynthesisOptions = {}) {
+  const activeUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const speakTimeoutRef = useRef<number | null>(null);
   const [isSupported, setIsSupported] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [voicesVersion, setVoicesVersion] = useState(0);
+
+  const clearPendingSpeak = useCallback(() => {
+    if (speakTimeoutRef.current === null) {
+      return;
+    }
+
+    window.clearTimeout(speakTimeoutRef.current);
+    speakTimeoutRef.current = null;
+  }, []);
 
   const stop = useCallback(() => {
     if (!getSpeechSynthesisSupport()) {
       return;
     }
 
+    clearPendingSpeak();
+    activeUtteranceRef.current = null;
     window.speechSynthesis.cancel();
     setIsSpeaking(false);
+  }, [clearPendingSpeak]);
+
+  const clearError = useCallback(() => {
+    setError(null);
   }, []);
 
   const speak = useCallback(
@@ -58,6 +76,8 @@ export function useSpeechSynthesis({
         return;
       }
 
+      clearPendingSpeak();
+      activeUtteranceRef.current = null;
       window.speechSynthesis.cancel();
       setError(null);
 
@@ -68,14 +88,28 @@ export function useSpeechSynthesis({
       utterance.voice = findVoice(lang);
 
       utterance.onstart = () => {
+        if (activeUtteranceRef.current !== utterance) {
+          return;
+        }
+
         setIsSpeaking(true);
       };
 
       utterance.onend = () => {
+        if (activeUtteranceRef.current !== utterance) {
+          return;
+        }
+
+        activeUtteranceRef.current = null;
         setIsSpeaking(false);
       };
 
       utterance.onerror = (event) => {
+        if (activeUtteranceRef.current !== utterance) {
+          return;
+        }
+
+        activeUtteranceRef.current = null;
         setIsSpeaking(false);
 
         if (event.error === "canceled" || event.error === "interrupted") {
@@ -85,15 +119,43 @@ export function useSpeechSynthesis({
         setError("语音播放失败，你仍然可以继续文字练习。");
       };
 
-      window.speechSynthesis.speak(utterance);
+      activeUtteranceRef.current = utterance;
+
+      speakTimeoutRef.current = window.setTimeout(() => {
+        speakTimeoutRef.current = null;
+
+        if (activeUtteranceRef.current !== utterance) {
+          return;
+        }
+
+        window.speechSynthesis.resume();
+        window.speechSynthesis.speak(utterance);
+      }, 80);
     },
-    [lang, pitch, rate],
+    [clearPendingSpeak, lang, pitch, rate, voicesVersion],
   );
 
   useEffect(() => {
     setIsSupported(getSpeechSynthesisSupport());
 
+    if (!getSpeechSynthesisSupport()) {
+      return;
+    }
+
+    const handleVoicesChanged = () => {
+      setVoicesVersion((version) => version + 1);
+    };
+
+    window.speechSynthesis.addEventListener(
+      "voiceschanged",
+      handleVoicesChanged,
+    );
+
     return () => {
+      window.speechSynthesis.removeEventListener(
+        "voiceschanged",
+        handleVoicesChanged,
+      );
       stop();
     };
   }, [stop]);
@@ -102,6 +164,7 @@ export function useSpeechSynthesis({
     isSupported,
     isSpeaking,
     error,
+    clearError,
     speak,
     stop,
   };

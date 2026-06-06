@@ -280,6 +280,7 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
   const {
     isSpeaking,
     error: speechPlaybackError,
+    clearError: clearSpeechPlaybackError,
     speak,
     stop: stopSpeaking,
   } = useSpeechSynthesis({ lang: "en-US" });
@@ -608,6 +609,7 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
                 <StatusNotice
                   title="语音播放提示"
                   description={speechPlaybackError}
+                  onDismiss={clearSpeechPlaybackError}
                   tone="warning"
                 />
               ) : null}
