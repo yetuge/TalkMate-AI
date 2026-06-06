@@ -15,6 +15,7 @@ import { FeedbackPanel } from "@/components/FeedbackPanel";
 import { StatusNotice } from "@/components/StatusNotice";
 import { VoiceRecorder } from "@/components/VoiceRecorder";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
+import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
 import { difficultyLabels, getScenarioLabel } from "@/lib/labels";
 import type {
   ChatMessage as ChatMessageType,
@@ -260,7 +261,6 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
   const [corrections, setCorrections] = useState<Correction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isEnding, setIsEnding] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [currentFeedback, setCurrentFeedback] = useState<Correction>();
@@ -274,6 +274,17 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
     startRecording,
     stopRecording,
   } = useSpeechRecognition({ lang: "en-US" });
+  const {
+    isSpeaking,
+    error: speechPlaybackError,
+    speak,
+    stop: stopSpeaking,
+  } = useSpeechSynthesis({ lang: "en-US" });
+
+  function handleStartRecording() {
+    stopSpeaking();
+    startRecording();
+  }
 
   async function handleSend() {
     const text = transcript.trim();
@@ -283,6 +294,7 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
     }
 
     stopRecording();
+    stopSpeaking();
 
     const userMessage = createMessage("user", text);
     const assistantMessage = createMessage("assistant", "");
@@ -292,7 +304,6 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
     resetTranscript();
     setCurrentFeedback(undefined);
     setIsLoading(true);
-    setIsSpeaking(false);
     setStatusMessage(null);
     setErrorMessage(null);
 
@@ -316,14 +327,17 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
         correctionPromise,
       ]);
 
+      const reply =
+        chatResult.reply ||
+        "Good answer. Can you add one more detail to make it sound more natural?";
+
       if (!chatResult.reply) {
         setMessages((currentMessages) =>
           currentMessages.map((message) =>
             message.id === assistantMessage.id
               ? {
                   ...message,
-                  content:
-                    "Good answer. Can you add one more detail to make it sound more natural?",
+                  content: reply,
                 }
               : message,
           ),
@@ -344,17 +358,18 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
           "部分 AI 服务使用了备用结果，但练习流程仍可继续并保存。",
         );
       }
-      setIsSpeaking(true);
+      speak(reply);
     } catch {
       const correctionResult = await correctionPromise;
+      const fallbackReply =
+        "Good answer. Can you add one more detail to make it sound more natural?";
 
       setMessages((currentMessages) =>
         currentMessages.map((message) =>
           message.id === assistantMessage.id
             ? {
                 ...message,
-                content:
-                  "Good answer. Can you add one more detail to make it sound more natural?",
+                content: fallbackReply,
               }
             : message,
         ),
@@ -367,12 +382,9 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
       setErrorMessage(
         "AI 服务暂时不可用，TalkMate 已使用本地备用回复。",
       );
-      setIsSpeaking(true);
+      speak(fallbackReply);
     } finally {
       setIsLoading(false);
-      window.setTimeout(() => {
-        setIsSpeaking(false);
-      }, 2200);
     }
   }
 
@@ -382,6 +394,7 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
     }
 
     setIsEnding(true);
+    stopSpeaking();
     setStatusMessage("正在生成学习报告并保存本次练习。");
     setErrorMessage(null);
 
@@ -541,6 +554,13 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
                   tone="warning"
                 />
               ) : null}
+              {speechPlaybackError ? (
+                <StatusNotice
+                  title="语音播放提示"
+                  description={speechPlaybackError}
+                  tone="warning"
+                />
+              ) : null}
             </div>
             <VoiceRecorder
               transcript={transcript}
@@ -550,7 +570,7 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
               isSpeechSupported={isSpeechSupported}
               speechError={speechError}
               onTranscriptChange={setTranscript}
-              onStartRecording={startRecording}
+              onStartRecording={handleStartRecording}
               onStopRecording={stopRecording}
               onSend={handleSend}
               onEndPractice={handleEndPractice}
