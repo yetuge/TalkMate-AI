@@ -16,6 +16,7 @@ import { StatusNotice } from "@/components/StatusNotice";
 import { VoiceRecorder } from "@/components/VoiceRecorder";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
+import { withLegacyCorrectionFields } from "@/lib/corrections";
 import { difficultyLabels, getScenarioLabel } from "@/lib/labels";
 import type {
   ChatMessage as ChatMessageType,
@@ -38,19 +39,18 @@ function createMessage(role: "user" | "assistant", content: string) {
 }
 
 function createMockFeedback(text: string): Correction {
-  return {
-    original: text,
-    corrected: text.trim().endsWith(".") ? text.trim() : `${text.trim()}.`,
+  return withLegacyCorrectionFields({
+    feedbackType: "ENHANCEMENT",
+    originalText: text,
+    recommendedExpression: text,
     reason: "当前使用本地备用反馈，真实纠错原因会由 AI 纠错接口生成。",
-    betterExpression:
-      "I would like to explain my answer with a clear example and one specific detail.",
     scores: {
       grammar: 82,
       fluency: 80,
       vocabulary: 78,
       pronunciation: 81,
     },
-  };
+  });
 }
 
 type CorrectionApiResponse = Partial<Correction> & {
@@ -232,12 +232,12 @@ async function fetchCorrectionFeedback(
     const correctionData = (await response.json()) as CorrectionApiResponse;
     const correction =
       response.ok &&
-      correctionData.original &&
-      correctionData.corrected &&
+      correctionData.feedbackType &&
+      correctionData.originalText &&
+      correctionData.recommendedExpression &&
       correctionData.reason &&
-      correctionData.betterExpression &&
       correctionData.scores
-        ? (correctionData as Correction)
+        ? withLegacyCorrectionFields(correctionData as Correction)
         : createMockFeedback(text);
 
     return {

@@ -1,5 +1,9 @@
 import { Lightbulb, Sparkles } from "lucide-react";
 import { LoadingDots } from "@/components/LoadingDots";
+import {
+  getCorrectionOriginal,
+  getCorrectionRecommendation,
+} from "@/lib/corrections";
 import { scoreLabels } from "@/lib/labels";
 import type { Correction } from "@/lib/types";
 
@@ -7,10 +11,6 @@ type FeedbackPanelProps = {
   feedback?: Correction;
   isLoading?: boolean;
 };
-
-function getRecommendedExpression(feedback: Correction) {
-  return feedback.betterExpression.trim() || feedback.corrected;
-}
 
 export function FeedbackPanel({ feedback, isLoading = false }: FeedbackPanelProps) {
   if (isLoading) {
@@ -55,7 +55,8 @@ export function FeedbackPanel({ feedback, isLoading = false }: FeedbackPanelProp
     );
   }
 
-  const recommendedExpression = getRecommendedExpression(feedback);
+  const originalText = getCorrectionOriginal(feedback);
+  const recommendedExpression = getCorrectionRecommendation(feedback);
 
   return (
     <aside className="flex h-full flex-col rounded-lg border bg-card p-5 text-card-foreground shadow-sm">
@@ -74,7 +75,7 @@ export function FeedbackPanel({ feedback, isLoading = false }: FeedbackPanelProp
           <p className="text-xs font-bold uppercase text-muted-foreground">
             原句
           </p>
-          <p className="mt-2 text-sm leading-6">{feedback.original}</p>
+          <p className="mt-2 text-sm leading-6">{originalText}</p>
         </section>
 
         <section className="rounded-lg border bg-secondary/10 p-4">
