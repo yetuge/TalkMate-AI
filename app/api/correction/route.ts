@@ -66,6 +66,10 @@ function mentionsWrittenFormatting(reason: string) {
   );
 }
 
+function hasChineseText(text: string) {
+  return /\p{Script=Han}/u.test(text);
+}
+
 function isRecommendationRequest(text: string) {
   return /\brecommendation(s)?\b|\brecommend\b|\bsuggestion(s)?\b/iu.test(
     text,
@@ -159,14 +163,14 @@ function createContextValidReason(userMessage: string) {
   const normalizedUserMessage = normalizeText(userMessage);
 
   if (normalizedUserMessage === "specificcuisine") {
-    return "This reply is understandable and natural in the current context. A small article makes it sound a bit more polished.";
+    return "这句话在当前上下文中可以自然成立。加上冠词 A 会让表达稍微更完整。";
   }
 
   if (normalizedUserMessage === "coffee") {
-    return "This is a valid short answer in context. Adding please makes it sound a bit more polite.";
+    return "这是当前上下文中成立的简短回答。加上 please 会更礼貌一点。";
   }
 
-  return "This is a valid short answer in context. The recommendation only makes it slightly more polished.";
+  return "这是当前上下文中成立的简短回答。推荐表达只做了轻微润色。";
 }
 
 function createFallbackScores(type: CorrectionFeedbackType, originalText: string) {
@@ -257,7 +261,7 @@ function createContextualFallbackCorrection({
       originalText,
       recommendedExpression: "Do you have any recommendations?",
       reason:
-        "Here, recommendations is more natural because you are asking for suggestions in general.",
+        "这里是在泛泛询问推荐，用复数 recommendations 更自然。",
       scores: createFallbackScores("CORRECTION", originalText),
     };
   }
@@ -267,7 +271,7 @@ function createContextualFallbackCorrection({
     originalText,
     recommendedExpression: originalText,
     reason:
-      "This reply is understandable. You can keep the same meaning and add detail only when the conversation needs it.",
+      "这句话可以理解。保持原意即可，只有在对话需要时再补充细节。",
     scores: createFallbackScores("ENHANCEMENT", originalText),
   };
 }
@@ -312,9 +316,9 @@ function cleanReason({
   fallback: string;
   originalText: string;
 }) {
-  if (mentionsWrittenFormatting(reason)) {
+  if (mentionsWrittenFormatting(reason) || !hasChineseText(reason)) {
     return isRecommendationRequest(originalText)
-      ? "Here, recommendations is more natural because you are asking for suggestions in general."
+      ? "这里是在泛泛询问推荐，用复数 recommendations 更自然。"
       : fallback;
   }
 
