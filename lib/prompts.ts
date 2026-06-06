@@ -28,11 +28,22 @@ export function formatMessagesForPrompt(messages: ChatMessage[]) {
     }));
 }
 
-export function buildCorrectionPrompt(text: string, scenario: Scenario) {
+export function buildCorrectionPrompt({
+  text,
+  scenario,
+  previousAssistantMessage,
+}: {
+  text: string;
+  scenario: Scenario;
+  previousAssistantMessage?: string;
+}) {
   return [
     "You are a professional English teacher.",
     "Analyze the learner's English sentence for spoken English practice.",
     `Current scenario: ${scenario.title}`,
+    previousAssistantMessage
+      ? `Assistant previous question: ${previousAssistantMessage}`
+      : "Assistant previous question: not provided.",
     `Learner sentence: ${text}`,
     "Return strict JSON only. Do not include markdown or explanations outside JSON.",
     "JSON format:",
@@ -51,6 +62,10 @@ export function buildCorrectionPrompt(text: string, scenario: Scenario) {
     "Rules:",
     "- original must be the learner sentence.",
     "- Treat this as spoken English feedback, not written essay proofreading.",
+    "- Evaluate whether the learner's answer responds naturally to the assistant's previous question.",
+    "- If the previous question is a yes/no question, a short answer like 'yes, please' can be acceptable.",
+    "- If the previous question offers choices, check whether the learner clearly selected one option.",
+    "- If the learner's answer is understandable from context, do not treat it as wrong only because it is short.",
     "- Ignore capitalization, punctuation, comma spacing, and other written formatting issues unless they change meaning.",
     "- Do not mention capitalization, punctuation, comma spacing, or missing periods as the main reason.",
     "- corrected should fix grammar, word choice, word order, or completeness only when they affect spoken communication.",

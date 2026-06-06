@@ -10,6 +10,7 @@ export const runtime = "nodejs";
 type CorrectionRequestBody = {
   text?: string;
   scenario?: string;
+  previousAssistantMessage?: string;
 };
 
 function clampScore(value: unknown) {
@@ -51,7 +52,54 @@ function isNegativeAnswer(text: string) {
   );
 }
 
-function createScenarioExpansion(text: string, scenario?: Scenario) {
+function isChoiceQuestion(text?: string) {
+  if (!text) {
+    return false;
+  }
+
+  return /\bor\b/i.test(text) && /\?/.test(text);
+}
+
+function createContextualAffirmativeExpansion(
+  scenario?: Scenario,
+  previousAssistantMessage?: string,
+) {
+  const previousQuestion = previousAssistantMessage?.toLowerCase() ?? "";
+
+  if (
+    scenario?.id === "travel" &&
+    previousQuestion.includes("book a hotel")
+  ) {
+    return "Yes, please. Could you help me book a hotel near the beach?";
+  }
+
+  if (
+    scenario?.id === "travel" &&
+    previousQuestion.includes("transportation")
+  ) {
+    return "Yes, please. Could you help me arrange transportation?";
+  }
+
+  if (scenario?.id === "travel") {
+    return "Yes, please. Could you help me with that?";
+  }
+
+  if (scenario?.id === "restaurant-ordering") {
+    return "Yes, please. I would like that.";
+  }
+
+  if (scenario?.id === "job-interview") {
+    return "Yes, I would be happy to explain.";
+  }
+
+  return "Yes, please. That would be helpful.";
+}
+
+function createScenarioExpansion(
+  text: string,
+  scenario?: Scenario,
+  previousAssistantMessage?: string,
+) {
   const normalizedText = text.trim().toLowerCase();
 
   if (normalizedText.includes("taxi")) {
@@ -59,19 +107,10 @@ function createScenarioExpansion(text: string, scenario?: Scenario) {
   }
 
   if (isAffirmativeAnswer(normalizedText)) {
-    if (scenario?.id === "travel") {
-      return "Yes, please. Could you help me arrange that?";
-    }
-
-    if (scenario?.id === "restaurant-ordering") {
-      return "Yes, please. I would like that.";
-    }
-
-    if (scenario?.id === "job-interview") {
-      return "Yes, I would be happy to explain.";
-    }
-
-    return "Yes, please. That would be helpful.";
+    return createContextualAffirmativeExpansion(
+      scenario,
+      previousAssistantMessage,
+    );
   }
 
   if (isNegativeAnswer(normalizedText)) {
@@ -97,16 +136,33 @@ function createScenarioExpansion(text: string, scenario?: Scenario) {
   return "I would like to explain my answer with one clear example and one specific detail.";
 }
 
-function createFallbackCorrection(text: string, scenario?: Scenario): Correction {
+function createFallbackCorrection({
+  text,
+  scenario,
+  previousAssistantMessage,
+}: {
+  text: string;
+  scenario?: Scenario;
+  previousAssistantMessage?: string;
+}): Correction {
   const trimmedText = text.trim();
   const isShortAnswer = countWords(trimmedText) <= 3;
-  const spokenExpansion = createScenarioExpansion(trimmedText, scenario);
+  const spokenExpansion = createScenarioExpansion(
+    trimmedText,
+    scenario,
+    previousAssistantMessage,
+  );
+  const isContextualChoiceAnswer =
+    isShortAnswer &&
+    isChoiceQuestion(previousAssistantMessage) &&
+    isAffirmativeAnswer(trimmedText);
 
   return {
     original: trimmedText,
     corrected: isShortAnswer ? spokenExpansion : trimmedText,
-    reason:
-      "这句话可以理解。作为口语回答，它还可以补充具体需求或原因，让对话更完整自然。",
+    reason: isContextualChoiceAnswer
+      ? "这句话能回应对方，但上一轮问题提供了多个选择，最好明确说明你想选哪一个。"
+      : "这句话可以理解。作为口语回答，它还可以补充具体需求或原因，让对话更完整自然。",
     betterExpression: spokenExpansion,
     scores: {
       grammar: 84,
@@ -132,9 +188,14 @@ function parseCorrection(
   rawContent: string,
   originalText: string,
   scenario: Scenario,
+  previousAssistantMessage?: string,
 ) {
   const parsed = parseJsonObject<Correction>(rawContent);
-  const fallback = createFallbackCorrection(originalText, scenario);
+  const fallback = createFallbackCorrection({
+    text: originalText,
+    scenario,
+    previousAssistantMessage,
+  });
   const scores = isScoreBreakdown(parsed.scores)
     ? parsed.scores
     : fallback.scores;
@@ -200,6 +261,7 @@ export async function POST(request: Request) {
   }
 
   const text = body.text?.trim();
+  const previousAssistantMessage = body.previousAssistantMessage?.trim();
   const scenario = getScenarioById(body.scenario);
 
   if (!text) {
@@ -220,7 +282,11 @@ export async function POST(request: Request) {
 
   if (!ai) {
     return NextResponse.json({
-      ...createFallbackCorrection(text, scenario),
+      ...createFallbackCorrection({
+        text,
+        scenario,
+        previousAssistantMessage,
+      }),
       provider: "fallback",
     });
   }
@@ -236,7 +302,11 @@ export async function POST(request: Request) {
         },
         {
           role: "user",
-          content: buildCorrectionPrompt(text, scenario),
+          content: buildCorrectionPrompt({
+            text,
+            scenario,
+            previousAssistantMessage,
+          }),
         },
       ],
       max_tokens: 360,
@@ -247,20 +317,28 @@ export async function POST(request: Request) {
 
     if (!content) {
       return NextResponse.json({
-        ...createFallbackCorrection(text, scenario),
+        ...createFallbackCorrection({
+          text,
+          scenario,
+          previousAssistantMessage,
+        }),
         provider: "fallback",
       });
     }
 
     return NextResponse.json({
-      ...parseCorrection(content, text, scenario),
+      ...parseCorrection(content, text, scenario, previousAssistantMessage),
       provider: "deepseek",
     });
   } catch (error) {
     console.error("Correction API failed", error);
 
     return NextResponse.json({
-      ...createFallbackCorrection(text, scenario),
+      ...createFallbackCorrection({
+        text,
+        scenario,
+        previousAssistantMessage,
+      }),
       provider: "fallback",
     });
   }

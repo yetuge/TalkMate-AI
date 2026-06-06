@@ -215,6 +215,7 @@ async function streamChatReply({
 async function fetchCorrectionFeedback(
   scenarioId: string,
   text: string,
+  previousAssistantMessage?: string,
 ): Promise<CorrectionResult> {
   try {
     const response = await fetch("/api/correction", {
@@ -225,6 +226,7 @@ async function fetchCorrectionFeedback(
       body: JSON.stringify({
         scenario: scenarioId,
         text,
+        previousAssistantMessage,
       }),
     });
     const correctionData = (await response.json()) as CorrectionApiResponse;
@@ -346,6 +348,11 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
     const userMessage = createMessage("user", text);
     const assistantMessage = createMessage("assistant", "");
     const nextMessages = [...messages, userMessage];
+    const previousAssistantMessage = [...messages]
+      .reverse()
+      .find(
+        (message) => message.role === "assistant" && message.content.trim(),
+      )?.content;
 
     setMessages([...nextMessages, assistantMessage]);
     resetTranscript();
@@ -354,7 +361,11 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
     setStatusMessage(null);
     setErrorMessage(null);
 
-    const correctionPromise = fetchCorrectionFeedback(scenario.id, text);
+    const correctionPromise = fetchCorrectionFeedback(
+      scenario.id,
+      text,
+      previousAssistantMessage,
+    );
 
     try {
       const [chatResult, correctionResult] = await Promise.all([
