@@ -457,8 +457,8 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
   }
 
   return (
-    <main className="flex min-h-screen flex-col bg-muted">
-      <header className="border-b bg-background px-4 py-3">
+    <main className="flex min-h-screen flex-col bg-muted lg:h-screen lg:overflow-hidden">
+      <header className="sticky top-0 z-30 shrink-0 border-b bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/85">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <Link
@@ -491,9 +491,9 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
         </div>
       </header>
 
-      <div className="mx-auto grid w-full max-w-7xl flex-1 gap-4 px-4 py-4 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <section className="flex min-h-[560px] flex-col rounded-lg border bg-background shadow-sm">
-          <div className="flex items-center justify-between gap-3 border-b px-5 py-4">
+      <div className="mx-auto grid w-full max-w-7xl flex-1 gap-4 px-4 py-4 lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_360px] lg:overflow-hidden">
+        <section className="flex min-h-[640px] flex-col rounded-lg border bg-background shadow-sm lg:min-h-0">
+          <div className="shrink-0 flex items-center justify-between gap-3 border-b px-5 py-4">
             <div>
               <h2 className="text-lg font-bold">对话练习</h2>
               <p className="text-sm text-muted-foreground">
@@ -506,7 +506,7 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
             </div>
           </div>
 
-          <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5">
             {messages.map((message) => (
               <ChatMessage message={message} key={message.id} />
             ))}
@@ -518,7 +518,7 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
             ) : null}
           </div>
 
-          <div className="border-t p-4">
+          <div className="sticky bottom-0 z-10 shrink-0 border-t bg-background p-4">
             <div className="mb-3 space-y-3">
               {isEnding ? (
                 <StatusNotice
@@ -558,7 +558,9 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
           </div>
         </section>
 
-        <FeedbackPanel feedback={currentFeedback} isLoading={isLoading} />
+        <div className="min-h-0 lg:sticky lg:top-[88px] lg:max-h-[calc(100vh-112px)] lg:self-start lg:overflow-y-auto">
+          <FeedbackPanel feedback={currentFeedback} isLoading={isLoading} />
+        </div>
       </div>
     </main>
   );
