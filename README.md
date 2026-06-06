@@ -41,9 +41,12 @@ https://github.com/yetuge/TalkMate-AI
 - Step 17：实现聊天区条件跟随滚动，已完成。
 - Step 18：修复语音播放提示和稳定性，已完成。
 - Step 19：优化实时纠错的口语反馈质量，已完成。
-- Step 20：优化课后报告 Prompt 质量，开发中。
+- Step 20：优化课后报告 Prompt 质量，已完成。
+- Step 21：补充 Demo 演示指南，开发中。
 
 详细记录见 [DEVELOPMENT_PROGRESS.md](./DEVELOPMENT_PROGRESS.md)。
+
+Demo 录制和评审复现步骤见 [DEMO_GUIDE.md](./DEMO_GUIDE.md)。
 
 ## 本地运行
 
@@ -102,7 +105,9 @@ Step 18 已优化语音播放稳定性和提示交互。语音播放失败提示
 
 Step 19 已优化实时纠错质量。即时反馈会参考上一轮 AI 提问，更关注口语交流中的语法、用词、完整度和自然度，不再把大小写、标点、逗号空格等书面格式问题作为主要纠错原因；较短但可理解的回答会结合上下文判断为有效短回答。反馈结构已调整为 `feedbackType`、`originalText`、`recommendedExpression`、`reason` 和 `scores`，前端只展示单一“推荐表达”，并要求推荐表达保持用户原意。
 
-Step 20 正在优化课后报告质量。报告 Prompt 会基于真实对话和纠错记录生成总结，不再强制凑满常见问题；`CONTEXT_VALID` 反馈不会被当作错误，大小写、标点和空格等格式问题也不会进入常见问题。
+Step 20 已优化课后报告质量。报告 Prompt 会基于真实对话和纠错记录生成总结，不再强制凑满常见问题；`CONTEXT_VALID` 反馈不会被当作错误，大小写、标点和空格等格式问题也不会进入常见问题。
+
+Step 21 正在补充 Demo 演示指南，说明本地环境、Supabase 建表、推荐录屏流程、测试输入和 fallback 说明。
 
 ## 环境变量
 
