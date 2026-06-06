@@ -261,6 +261,7 @@ TalkMate AI 是一个 Web 端 AI 英语口语陪练 MVP。目标用户流程如�
 - SSE token 解析完成后写入 `renderBuffer`，不再每个 token 都立即触发 React 状态更新。
 - 使用固定间隔 timer 批量 flush 缓冲内容到同一条 AI 回复气泡。
 - SSE 流结束或读取退出时强制 flush 剩余内容，避免最后一段回复丢失。
+- 为 DeepSeek 流式连接增加默认 15 秒超时，网络异常时快速进入 fallback 流式回复。
 - 保持 `/api/chat/stream` 后端接口不变，只优化前端网络读取和 UI 渲染节奏。
 
 主要新增文件：
@@ -545,6 +546,7 @@ http://localhost:3000/practice?scenario=job-interview
 - 输入英文句子并点击发送后，AI 回复仍然流式显示。
 - 网络 chunk 被正确拼接为完整 SSE 消息，token 内容不丢失、不截断。
 - 回复输出节奏更加平滑，没有因为 token 过碎导致明显卡顿。
+- DeepSeek 网络异常时，流式接口不会长时间等待，会在超时后返回 fallback 回复。
 - SSE 流结束后最后一段文本完整显示。
 - 即时纠错面板仍能正常生成反馈。
 
