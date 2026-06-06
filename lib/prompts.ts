@@ -112,12 +112,27 @@ export function buildReportPrompt({
   corrections: Correction[];
   durationSeconds: number;
 }) {
+  const userReplyCount = messages.filter((message) => message.role === "user").length;
+  const correctionRecords = corrections.map((correction) => ({
+    feedbackType: correction.feedbackType ?? "ENHANCEMENT",
+    originalText: correction.originalText ?? correction.original ?? "",
+    recommendedExpression:
+      correction.recommendedExpression ??
+      correction.betterExpression ??
+      correction.corrected ??
+      "",
+    reason: correction.reason,
+    scores: correction.scores,
+  }));
+
   return [
-    "You are an English learning analyst.",
-    "Generate a learning report for this speaking practice session.",
+    "You are an English speaking coach generating a session report.",
+    "Use only the conversation and correction records provided.",
+    "Do not invent issues that did not appear in this session.",
     "Return strict JSON only. Do not include markdown or explanations outside JSON.",
     `Scenario: ${scenario.title}`,
     `Duration seconds: ${durationSeconds}`,
+    `User reply count: ${userReplyCount}`,
     "Conversation messages:",
     JSON.stringify(
       messages.map((message) => ({
@@ -128,7 +143,7 @@ export function buildReportPrompt({
       2,
     ),
     "Correction records:",
-    JSON.stringify(corrections, null, 2),
+    JSON.stringify(correctionRecords, null, 2),
     "JSON format:",
     "{",
     '  "overallScore": 0,',
@@ -146,10 +161,18 @@ export function buildReportPrompt({
     "}",
     "Rules:",
     "- Scores must be integers from 0 to 100.",
-    "- commonMistakes must contain at least 3 Chinese items.",
-    "- suggestions must contain at least 3 Chinese items.",
-    "- practiceSentences must contain at least 5 English sentences.",
-    "- speakingTasks must contain at least 5 Chinese speaking tasks.",
+    "- summary, commonMistakes, suggestions, and speakingTasks must be written in Chinese.",
+    "- practiceSentences must be written in English.",
+    "- Ignore capitalization, punctuation, and spacing unless they changed meaning.",
+    "- Do not list capitalization, punctuation, comma spacing, missing periods, or question marks as common mistakes.",
+    "- commonMistakes should contain 0 to 3 Chinese items. If there are not enough real mistakes, return fewer items.",
+    "- Base commonMistakes mainly on records with feedbackType CORRECTION.",
+    "- Do not treat CONTEXT_VALID feedback as a mistake.",
+    "- If the session has fewer than 3 user replies, mention in summary that the sample is limited.",
+    "- suggestions should contain 2 to 5 practical, scenario-specific Chinese items.",
+    "- suggestions should help the learner speak better next time; do not repeat issues that did not appear.",
+    "- practiceSentences should contain 3 to 5 English sentences based on the real scenario and mistakes.",
+    "- speakingTasks should contain 3 to 5 Chinese speaking tasks.",
     "- summary must be written in Chinese.",
   ].join("\n");
 }
