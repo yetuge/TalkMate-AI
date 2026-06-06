@@ -40,6 +40,40 @@ function differsOnlyByWrittenFormatting(original: string, corrected: string) {
   );
 }
 
+function mentionsWrittenFormatting(reason: string) {
+  return /capital|uppercase|lowercase|punctuation|comma|spacing|period|question mark|大写|小写|首字母|标点|逗号|空格|句号|问号/iu.test(
+    reason,
+  );
+}
+
+function hasRecommendationPluralIssue(original: string, recommended: string) {
+  const originalText = original.toLowerCase();
+  const recommendedText = recommended.toLowerCase();
+
+  return (
+    /\bany recommendation\b/u.test(originalText) ||
+    (/\brecommendation\b/u.test(originalText) &&
+      (/\brecommendations\b/u.test(recommendedText) ||
+        /\brecommend\b/u.test(recommendedText)))
+  );
+}
+
+function createMeaningfulReason({
+  original,
+  recommended,
+  fallbackReason,
+}: {
+  original: string;
+  recommended: string;
+  fallbackReason: string;
+}) {
+  if (hasRecommendationPluralIssue(original, recommended)) {
+    return "这句话可以理解。这里是在询问推荐内容，用复数 recommendations，或者直接说 recommend something 会更自然。";
+  }
+
+  return fallbackReason;
+}
+
 function isAffirmativeAnswer(text: string) {
   return /^(yes|yeah|yep|sure|ok|okay|please|yesplease|yespleas)$/u.test(
     normalizeMeaningText(text),
@@ -217,13 +251,24 @@ function parseCorrection(
     parsed.betterExpression.trim()
       ? parsed.betterExpression.trim()
       : fallback.betterExpression;
+  const meaningfulReason = mentionsWrittenFormatting(reason)
+    ? createMeaningfulReason({
+        original,
+        recommended: betterExpression || corrected,
+        fallbackReason: fallback.reason,
+      })
+    : reason;
 
   if (differsOnlyByWrittenFormatting(original, corrected)) {
     return {
       original,
       corrected: original,
-      reason:
-        "这句话可以理解。作为口语回答已经能表达意思，也可以进一步补充具体需求或原因。",
+      reason: createMeaningfulReason({
+        original,
+        recommended: betterExpression,
+        fallbackReason:
+          "这句话可以理解。作为口语回答已经能表达意思，也可以进一步补充具体需求或原因。",
+      }),
       betterExpression,
       scores: {
         grammar: Math.max(84, clampScore(scores.grammar)),
@@ -237,7 +282,7 @@ function parseCorrection(
   return {
     original,
     corrected,
-    reason,
+    reason: meaningfulReason,
     betterExpression,
     scores: {
       grammar: clampScore(scores.grammar),
