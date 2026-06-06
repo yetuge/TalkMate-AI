@@ -324,6 +324,9 @@ TalkMate AI 是一个 Web 端 AI 英语口语陪练 MVP。目标用户流程如�
 - 练习页调用 `/api/correction` 时传入上一轮 AI 提问，纠错可以结合上下文判断回答是否贴题。
 - 纠错 Prompt 增加 yes/no 问题和二选一问题的判断规则。
 - 右侧即时反馈面板将“修改后”和“更自然表达”合并为单一“推荐表达”。
+- 即时纠错返回结构调整为 `feedbackType`、`originalText`、`recommendedExpression`、`reason` 和 `scores`。
+- `feedbackType` 支持 `CORRECTION`、`ENHANCEMENT` 和 `CONTEXT_VALID`，用于区分纠错、优化和上下文中自然成立的短回答。
+- 推荐表达必须保持用户原意，不允许编造新的原因、态度、偏好或信息。
 - 后端解析纠错结果时识别“只改大小写或标点”的情况，避免把这类格式差异作为主要反馈。
 - 后端会清洗大小写、标点、问号等格式类原因，优先展示语义、用词或口语表达层面的解释。
 - 优化 fallback 纠错内容，默认强调口语表达完整度，不再补充基础标点作为纠错理由。
@@ -678,6 +681,8 @@ POST http://localhost:3000/api/correction
 - `taxi` 这类短回答会被引导扩展成自然完整的口语句子。
 - 当上一轮 AI 问的是 yes/no 或二选一问题时，`yes, please` 会按上下文判断，不会简单判为语法错误。
 - 即时反馈面板只展示一个 `推荐表达`，不再同时展示 `修改后` 和 `更自然表达`。
+- `specific cuisine`、`coffee` 等上下文中成立的短回答会返回 `CONTEXT_VALID`，不会被扩写成不相关偏好或理由。
+- `do you have any recommendation` 会推荐 `Do you have any recommendations?`，并保持询问推荐的原意。
 - 真实语法、用词、词序或表达完整度问题仍会正常给出纠错建议。
 
 Step 7 API 验证重点：
@@ -942,6 +947,7 @@ supabase/
 - 让即时反馈参考上一轮 AI 提问，判断回答是否真正回应了问题。
 - 避免把大小写、标点、逗号空格等语音识别文本格式问题当作主要错误。
 - 将反馈面板的推荐句收敛为一个可以直接跟读的表达。
+- 使用结构化 `feedbackType` 区分纠错、优化和上下文有效回答。
 - 对简短回答给出可直接跟读的完整表达。
 
 ## 建议提交计划

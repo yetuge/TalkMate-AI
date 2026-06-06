@@ -60,11 +60,13 @@ function isCorrections(value: unknown): value is Correction[] {
       (correction) =>
         typeof correction === "object" &&
         correction !== null &&
-        "original" in correction &&
-        "corrected" in correction &&
         "reason" in correction &&
-        "betterExpression" in correction &&
-        "scores" in correction,
+        "scores" in correction &&
+        (("originalText" in correction &&
+          "recommendedExpression" in correction) ||
+          ("original" in correction &&
+            "corrected" in correction &&
+            "betterExpression" in correction)),
     )
   );
 }

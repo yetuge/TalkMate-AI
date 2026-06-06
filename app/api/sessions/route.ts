@@ -1,4 +1,10 @@
 import { NextResponse } from "next/server";
+import {
+  getCorrectionFeedbackType,
+  getCorrectionOriginal,
+  getCorrectionRecommendation,
+  withLegacyCorrectionFields,
+} from "@/lib/corrections";
 import { createSupabaseServerClient } from "@/lib/supabase";
 import type {
   ChatMessage,
@@ -45,11 +51,13 @@ function isCorrections(value: unknown): value is Correction[] {
       (correction) =>
         typeof correction === "object" &&
         correction !== null &&
-        "original" in correction &&
-        "corrected" in correction &&
         "reason" in correction &&
-        "betterExpression" in correction &&
-        "scores" in correction,
+        "scores" in correction &&
+        (("originalText" in correction &&
+          "recommendedExpression" in correction) ||
+          ("original" in correction &&
+            "corrected" in correction &&
+            "betterExpression" in correction)),
     )
   );
 }
@@ -160,14 +168,19 @@ export async function POST(request: Request) {
     const { error: correctionsError } = await supabase
       .from("practice_corrections")
       .insert(
-        body.corrections.map((correction) => ({
-          session_id: session.id,
-          original: correction.original,
-          corrected: correction.corrected,
-          reason: correction.reason,
-          better_expression: correction.betterExpression,
-          scores: correction.scores,
-        })),
+        body.corrections.map((correction) => {
+          const originalText = getCorrectionOriginal(correction);
+          const recommendedExpression = getCorrectionRecommendation(correction);
+
+          return {
+            session_id: session.id,
+            original: originalText,
+            corrected: recommendedExpression,
+            reason: correction.reason,
+            better_expression: recommendedExpression,
+            scores: correction.scores,
+          };
+        }),
       );
 
     if (correctionsError) {
@@ -238,11 +251,14 @@ export async function GET(request: Request) {
           })) ?? [],
         corrections:
           corrections?.map((correction) => ({
-            original: correction.original,
-            corrected: correction.corrected,
-            reason: correction.reason,
-            betterExpression: correction.better_expression,
-            scores: correction.scores,
+            ...withLegacyCorrectionFields({
+              feedbackType: getCorrectionFeedbackType(undefined, "ENHANCEMENT"),
+              originalText: correction.original,
+              recommendedExpression:
+                correction.better_expression || correction.corrected,
+              reason: correction.reason,
+              scores: correction.scores,
+            }),
           })) ?? [],
       },
       provider: "supabase",

@@ -32,12 +32,20 @@ export type ScoreBreakdown = {
   pronunciation: number;
 };
 
+export type CorrectionFeedbackType =
+  | "CORRECTION"
+  | "ENHANCEMENT"
+  | "CONTEXT_VALID";
+
 export type Correction = {
-  original: string;
-  corrected: string;
+  feedbackType: CorrectionFeedbackType;
+  originalText: string;
+  recommendedExpression: string;
   reason: string;
-  betterExpression: string;
   scores: ScoreBreakdown;
+  original?: string;
+  corrected?: string;
+  betterExpression?: string;
 };
 
 export type PracticeReport = {
