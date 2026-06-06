@@ -20,9 +20,9 @@ TalkMate AI 是一个 Web 端 AI 英语口语陪练 MVP。目标用户流程如�
 
 ## 当前状态
 
-当前阶段：**Step 15 已完成**
+当前阶段：**Step 16 已完成**
 
-项目已经初始化为一个最小可运行的 Next.js 应用，完成基础场景数据、主要页面路由占位、首页与场景选择页、练习页基础 UI、浏览器语音识别 Hook、AI 对话 API、即时纠错 API、课后报告 API、Supabase 历史记录保存、历史记录页和报告详情读取，并优化 UI 状态展示、AI 回复流式输出、中文界面文案、流式渲染节奏和长对话布局。
+项目已经初始化为一个最小可运行的 Next.js 应用，完成基础场景数据、主要页面路由占位、首页与场景选择页、练习页基础 UI、浏览器语音识别 Hook、AI 对话 API、即时纠错 API、课后报告 API、Supabase 历史记录保存、历史记录页和报告详情读取，并优化 UI 状态展示、AI 回复流式输出、中文界面文案、流式渲染节奏、长对话布局和 AI 回复语音播放。
 
 ## 已完成工作
 
@@ -276,6 +276,18 @@ TalkMate AI 是一个 Web 端 AI 英语口语陪练 MVP。目标用户流程如�
 - 底部输入控制区固定在练习卡片底部，发送和结束按钮保持可见。
 - 右侧即时反馈面板在桌面端 sticky，并限制最大高度，内容过长时面板内部滚动。
 
+### Step 16：实现 AI 回复语音播放
+
+状态：**已完成**
+
+已完成内容：
+
+- 新增 `hooks/useSpeechSynthesis.ts`，封装浏览器 SpeechSynthesis 播放能力。
+- AI 回复生成完成后自动朗读英文回复。
+- 新一轮发送消息、开始录音或结束练习时，会停止当前 AI 朗读。
+- 朗读状态继续复用练习页中的 `AI 正在朗读` 提示。
+- 浏览器不支持 SpeechSynthesis 或播放失败时，页面显示中文提示，文字练习流程不受影响。
+
 主要新增文件：
 
 ```text
@@ -312,6 +324,7 @@ components/FeedbackPanel.tsx
 components/VoiceRecorder.tsx
 components/LoadingDots.tsx
 hooks/useSpeechRecognition.ts
+hooks/useSpeechSynthesis.ts
 lib/speech-recognition.d.ts
 lib/ai.ts
 lib/prompts.ts
@@ -575,6 +588,19 @@ http://localhost:3000/practice?scenario=job-interview
 - 底部输入框、发送按钮和结束按钮始终可操作。
 - 桌面端右侧即时反馈面板在滚动时保持可见。
 
+Step 16 页面验证重点：
+
+```text
+http://localhost:3000/practice?scenario=job-interview
+```
+
+需要确认：
+
+- 发送英文回答后，AI 回复生成完成并自动播放语音。
+- 语音播放时页面显示 `AI 正在朗读`。
+- 播放期间开始录音或发送下一轮消息，会停止上一段朗读。
+- 浏览器不支持语音播放时，页面显示提示且文字练习流程继续可用。
+
 Step 7 API 验证重点：
 
 ```text
@@ -797,6 +823,16 @@ supabase/
 - 让聊天区独立滚动，降低页面跳动和迷失感。
 - 提升练习页在桌面端连续使用时的可操作性。
 
+### Step 16：实现 AI 回复语音播放
+
+状态：**已完成**
+
+目标：
+
+- 让 AI 英文回复可以被浏览器自动朗读。
+- 增强口语陪练的听说练习体验。
+- 在浏览器不支持时保持主流程可用。
+
 ## 建议提交计划
 
 为了满足比赛要求中的持续开发记录，建议每个 Step 单独提交，并尽量对应单独 PR。
@@ -891,6 +927,12 @@ feat: buffer streamed chat rendering
 fix: keep practice controls visible during long chats
 ```
 
+建议第十六个 PR 标题：
+
+```text
+feat: add AI speech playback
+```
+
 建议第一个 PR 描述：
 
 ```text
@@ -914,4 +956,4 @@ fix: keep practice controls visible during long chats
 
 ## 下一步
 
-完成 Step 15 PR 后，继续拆分 README、Demo 指南和最终 polish PR。
+完成 Step 16 PR 后，继续拆分 README、Demo 指南和最终 polish PR。
