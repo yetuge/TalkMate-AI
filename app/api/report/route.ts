@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import { createAiClient, aiConfig } from "@/lib/ai";
+import {
+  getCorrectionFeedbackType,
+  getCorrectionRecommendation,
+} from "@/lib/corrections";
 import { parseJsonObject } from "@/lib/json";
 import { buildReportPrompt } from "@/lib/prompts";
 import { getScenarioById } from "@/lib/scenarios";
@@ -7,6 +11,7 @@ import type {
   ChatMessage,
   Correction,
   PracticeReport,
+  Scenario,
   ScoreBreakdown,
 } from "@/lib/types";
 
@@ -84,7 +89,120 @@ function averageScore(corrections: Correction[], key: keyof ScoreBreakdown) {
   return Math.round(total / corrections.length);
 }
 
-function createFallbackReport(corrections: Correction[]): PracticeReport {
+function isFormattingIssue(text: string) {
+  return /大写|小写|首字母|标点|逗号|空格|句号|问号|capital|punctuation|comma|spacing|period|question mark/iu.test(
+    text,
+  );
+}
+
+function getUserReplyCount(messages: ChatMessage[]) {
+  return messages.filter((message) => message.role === "user").length;
+}
+
+function createCommonMistakes(corrections: Correction[]) {
+  return corrections
+    .filter(
+      (correction) =>
+        getCorrectionFeedbackType(correction.feedbackType) === "CORRECTION" &&
+        !isFormattingIssue(correction.reason),
+    )
+    .map((correction) => correction.reason)
+    .filter((reason, index, reasons) => reasons.indexOf(reason) === index)
+    .slice(0, 3);
+}
+
+function createScenarioSuggestions(scenario: Scenario, hasMistakes: boolean) {
+  if (scenario.id === "travel") {
+    return hasMistakes
+      ? [
+          "询问推荐时，可以优先练习 Do you have any recommendations? 这类自然问法。",
+          "把问题说得更具体，例如说明想问景点、餐厅还是交通。",
+          "多练习旅行场景中的实用词汇，如 attractions、directions、schedule。",
+        ]
+      : [
+          "继续练习把简短回答说得清楚自然。",
+          "尝试围绕景点、交通、住宿各提出一个英文问题。",
+          "多使用 please、could you 等礼貌表达，让旅行咨询更自然。",
+        ];
+  }
+
+  return hasMistakes
+    ? [
+        "优先复习本次纠错中出现的真实问题。",
+        "把推荐表达多读几遍，熟悉更自然的口语句型。",
+        "下一轮回答时尽量补充一个具体信息，让对话更完整。",
+      ]
+    : [
+        "继续保持简短清晰的回答。",
+        "下一轮可以主动补充一个具体细节。",
+        "多练习把同一个意思换成两种自然表达。",
+      ];
+}
+
+function createPracticeSentences(
+  corrections: Correction[],
+  scenario: Scenario,
+) {
+  const recommendations = corrections
+    .map((correction) => getCorrectionRecommendation(correction))
+    .filter(Boolean)
+    .slice(0, 3);
+
+  if (recommendations.length >= 3) {
+    return recommendations;
+  }
+
+  const fallback =
+    scenario.id === "travel"
+      ? [
+          "Do you have any recommendations?",
+          "Could you recommend a place to visit?",
+          "Could you help me with the bus schedule?",
+          "What local food do you recommend?",
+          "How can I get there from my hotel?",
+        ]
+      : [
+          "Could you give me a recommendation?",
+          "I would like to explain my answer clearly.",
+          "Could you help me with that?",
+          "Let me give you one more detail.",
+          "That sounds good to me.",
+        ];
+
+  return [...recommendations, ...fallback]
+    .filter((sentence, index, sentences) => sentences.indexOf(sentence) === index)
+    .slice(0, 5);
+}
+
+function createSpeakingTasks(scenario: Scenario) {
+  if (scenario.id === "travel") {
+    return [
+      "用英文询问一个景点推荐。",
+      "用英文询问公交或路线信息。",
+      "用英文说明你想找餐厅、景点还是交通建议。",
+      "用英文向酒店前台请求帮助。",
+      "用英文描述你计划去哪里以及为什么。",
+    ];
+  }
+
+  return [
+    "用英文回答一个简短问题，并补充一个细节。",
+    "用英文提出一个礼貌请求。",
+    "用英文复述一条推荐表达。",
+    "用英文说明你的选择。",
+    "用英文提出一个追问。",
+  ];
+}
+
+function createFallbackReport({
+  corrections,
+  messages,
+  scenario,
+}: {
+  corrections: Correction[];
+  messages: ChatMessage[];
+  scenario: Scenario;
+}): PracticeReport {
   const scores = {
     grammar: averageScore(corrections, "grammar"),
     fluency: averageScore(corrections, "fluency"),
@@ -95,36 +213,21 @@ function createFallbackReport(corrections: Correction[]): PracticeReport {
     (scores.grammar + scores.fluency + scores.vocabulary + scores.pronunciation) /
       4,
   );
+  const commonMistakes = createCommonMistakes(corrections);
+  const userReplyCount = getUserReplyCount(messages);
+  const sampleNote =
+    userReplyCount < 3
+      ? "本次练习样本较少，以下建议仅基于当前几轮对话。"
+      : "本次练习已经能够完成基础交流。";
 
   return {
     overallScore,
     scores,
-    commonMistakes: [
-      "部分回答还可以加入更具体的细节。",
-      "句子结构可以更加自然。",
-      "词汇选择可以更加丰富。",
-    ],
-    suggestions: [
-      "每次回答后补充一个具体例子。",
-      "描述已完成的工作时，注意清楚使用过去时。",
-      "多练习使用 first、also、finally 等连接词。",
-    ],
-    practiceSentences: [
-      "I worked on a booking system for a real project.",
-      "I improved the user experience by making pages load faster.",
-      "One challenge I solved was communicating requirements clearly.",
-      "I would like to explain my idea with a specific example.",
-      "In my opinion, this plan is practical but needs more detail.",
-    ],
-    speakingTasks: [
-      "用一分钟完成英文自我介绍。",
-      "描述一个你做过的项目。",
-      "解释一个你解决过的挑战。",
-      "针对一个项目计划表达你的观点。",
-      "用英文提出两个追问。",
-    ],
-    summary:
-      "本次练习已经能够完成基础交流。接下来可以重点提升句子细节、时态准确性和表达的自然度。",
+    commonMistakes,
+    suggestions: createScenarioSuggestions(scenario, commonMistakes.length > 0),
+    practiceSentences: createPracticeSentences(corrections, scenario),
+    speakingTasks: createSpeakingTasks(scenario),
+    summary: `${sampleNote} 接下来可以继续练习更具体、自然的场景表达。`,
   };
 }
 
@@ -133,13 +236,27 @@ function normalizeStringArray(value: unknown, fallback: string[], minLength: num
     return fallback;
   }
 
-  const items = value.filter((item): item is string => typeof item === "string");
+  const items = value
+    .filter((item): item is string => typeof item === "string")
+    .filter((item) => item.trim())
+    .map((item) => item.trim());
 
   if (items.length < minLength) {
     return fallback;
   }
 
   return items;
+}
+
+function normalizeCommonMistakes(value: unknown, fallback: string[]) {
+  if (!Array.isArray(value)) {
+    return fallback;
+  }
+
+  return value
+    .filter((item): item is string => typeof item === "string")
+    .filter((item) => item.trim() && !isFormattingIssue(item))
+    .slice(0, 3);
 }
 
 function parseReport(rawContent: string, fallback: PracticeReport) {
@@ -154,12 +271,11 @@ function parseReport(rawContent: string, fallback: PracticeReport) {
       vocabulary: clampScore(scores.vocabulary),
       pronunciation: clampScore(scores.pronunciation),
     },
-    commonMistakes: normalizeStringArray(
+    commonMistakes: normalizeCommonMistakes(
       parsed.commonMistakes,
       fallback.commonMistakes,
-      3,
     ),
-    suggestions: normalizeStringArray(parsed.suggestions, fallback.suggestions, 3),
+    suggestions: normalizeStringArray(parsed.suggestions, fallback.suggestions, 2),
     practiceSentences: normalizeStringArray(
       parsed.practiceSentences,
       fallback.practiceSentences,
@@ -216,7 +332,11 @@ export async function POST(request: Request) {
     typeof body.durationSeconds === "number" && body.durationSeconds > 0
       ? Math.round(body.durationSeconds)
       : 60;
-  const fallback = createFallbackReport(body.corrections);
+  const fallback = createFallbackReport({
+    corrections: body.corrections,
+    messages: body.messages,
+    scenario,
+  });
   const ai = createAiClient();
 
   if (!ai) {
