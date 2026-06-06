@@ -84,7 +84,7 @@ Step 12 已新增 SSE 流式对话接口。练习页发送文本后，AI 回复�
 
 Step 13 已将主要页面、按钮、状态提示、反馈面板和报告栏目改为中文展示；英文对话内容、纠错后的英文句子和练习句子仍保留英文，便于继续进行口语训练。
 
-Step 14 已为 SSE 流式回复增加双缓冲处理。`sseBuffer` 用于拼接完整 SSE 消息，`renderBuffer` 用于按固定间隔批量刷新 token 到消息气泡中，降低 React 高频重渲染并让输出节奏更平滑。
+Step 14 已为 SSE 流式回复增加双缓冲处理。`sseBuffer` 用于拼接完整 SSE 消息，`renderBuffer` 用于按固定间隔批量刷新 token 到消息气泡中，降低 React 高频重渲染并让输出节奏更平滑。流式连接默认 15 秒超时，DeepSeek 网络异常时会快速进入 fallback 回复。
 
 ## 环境变量
 
@@ -94,6 +94,7 @@ Step 14 已为 SSE 流式回复增加双缓冲处理。`sseBuffer` 用于拼接�
 DEEPSEEK_API_KEY=
 DEEPSEEK_BASE_URL=https://api.deepseek.com
 DEEPSEEK_MODEL=deepseek-v4-flash
+DEEPSEEK_CHAT_STREAM_TIMEOUT_MS=15000
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
