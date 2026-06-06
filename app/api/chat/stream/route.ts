@@ -85,6 +85,8 @@ export async function POST(request: Request) {
           max_tokens: 180,
           temperature: 0.7,
           stream: true,
+        }, {
+          timeout: aiConfig.chatStreamTimeoutMs,
         });
 
         for await (const chunk of completion) {
