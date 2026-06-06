@@ -20,9 +20,9 @@ TalkMate AI 是一个 Web 端 AI 英语口语陪练 MVP。目标用户流程如�
 
 ## 当前状态
 
-当前阶段：**Step 17 已完成**
+当前阶段：**Step 18 已完成**
 
-项目已经初始化为一个最小可运行的 Next.js 应用，完成基础场景数据、主要页面路由占位、首页与场景选择页、练习页基础 UI、浏览器语音识别 Hook、AI 对话 API、即时纠错 API、课后报告 API、Supabase 历史记录保存、历史记录页和报告详情读取，并优化 UI 状态展示、AI 回复流式输出、中文界面文案、流式渲染节奏、长对话布局、AI 回复语音播放和聊天区条件跟随滚动。
+项目已经初始化为一个最小可运行的 Next.js 应用，完成基础场景数据、主要页面路由占位、首页与场景选择页、练习页基础 UI、浏览器语音识别 Hook、AI 对话 API、即时纠错 API、课后报告 API、Supabase 历史记录保存、历史记录页和报告详情读取，并优化 UI 状态展示、AI 回复流式输出、中文界面文案、流式渲染节奏、长对话布局、AI 回复语音播放、聊天区条件跟随滚动和语音播放错误提示体验。
 
 ## 已完成工作
 
@@ -299,6 +299,18 @@ TalkMate AI 是一个 Web 端 AI 英语口语陪练 MVP。目标用户流程如�
 - 当用户位于底部附近时，新消息和 SSE 流式回复会自动滚动到底部。
 - 当用户手动向上查看历史消息时，自动跟随暂停，避免页面强制跳回底部。
 - 用户发送新一轮消息时重新开启跟随，让当前对话自然回到底部。
+
+### Step 18：修复语音播放提示和稳定性
+
+状态：**已完成**
+
+已完成内容：
+
+- `StatusNotice` 新增可选关闭按钮。
+- 语音播放失败提示支持手动关闭，不再一直占用输入区上方空间。
+- `useSpeechSynthesis` 增强播放状态管理，避免旧 utterance 的结束或错误事件影响当前播放状态。
+- 播放前清理 pending speak timer，并延迟短时间执行 `speechSynthesis.speak`，降低 cancel 后立即播放导致的中断概率。
+- 监听浏览器 `voiceschanged`，在语音列表加载后更稳定地选择英文语音。
 
 主要新增文件：
 
@@ -625,6 +637,19 @@ http://localhost:3000/practice?scenario=job-interview
 - 手动向上滚动查看历史消息后，后续流式 token 不会强制拉回底部。
 - 再次发送新消息时，聊天区会重新回到底部。
 
+Step 18 页面验证重点：
+
+```text
+http://localhost:3000/practice?scenario=job-interview
+```
+
+需要确认：
+
+- AI 回复语音播放失败时，页面显示语音播放提示。
+- 点击提示右侧关闭按钮后，提示会立即消失。
+- 连续发送多轮消息时，上一段播放不会影响当前播放状态。
+- 浏览器可用英文语音加载后，AI 回复朗读更稳定。
+
 Step 7 API 验证重点：
 
 ```text
@@ -867,6 +892,16 @@ supabase/
 - 用户在底部时自动跟随最新回复。
 - 用户查看历史消息时不打断阅读位置。
 
+### Step 18：修复语音播放提示和稳定性
+
+状态：**已完成**
+
+目标：
+
+- 让语音播放失败提示可以被用户手动关闭。
+- 减少 SpeechSynthesis 取消后立刻播放导致的异常。
+- 避免旧播放事件干扰当前朗读状态。
+
 ## 建议提交计划
 
 为了满足比赛要求中的持续开发记录，建议每个 Step 单独提交，并尽量对应单独 PR。
@@ -973,6 +1008,12 @@ feat: add AI speech playback
 feat: add conditional chat autoscroll
 ```
 
+建议第十八个 PR 标题：
+
+```text
+fix: improve speech playback notice handling
+```
+
 建议第一个 PR 描述：
 
 ```text
@@ -996,4 +1037,4 @@ feat: add conditional chat autoscroll
 
 ## 下一步
 
-完成 Step 17 PR 后，继续拆分 README、Demo 指南和最终 polish PR。
+完成 Step 18 PR 后，继续拆分 README、Demo 指南和最终 polish PR。
