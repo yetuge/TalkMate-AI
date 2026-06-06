@@ -58,6 +58,30 @@ function hasRecommendationPluralIssue(original: string, recommended: string) {
   );
 }
 
+function isRecommendationRequest(text: string) {
+  return /\brecommendation(s)?\b|\brecommend\b|\bsuggestion(s)?\b/iu.test(
+    text,
+  );
+}
+
+function keepsRecommendationMeaning(text: string) {
+  return /\brecommendation(s)?\b|\brecommend\b|\bsuggestion(s)?\b/iu.test(
+    text,
+  );
+}
+
+function createRecommendationExpression(scenario?: Scenario) {
+  if (scenario?.id === "travel") {
+    return "Do you have any recommendations for my trip?";
+  }
+
+  if (scenario?.id === "restaurant-ordering") {
+    return "Do you have any recommendations from the menu?";
+  }
+
+  return "Do you have any recommendations?";
+}
+
 function createMeaningfulReason({
   original,
   recommended,
@@ -135,6 +159,10 @@ function createScenarioExpansion(
   previousAssistantMessage?: string,
 ) {
   const normalizedText = text.trim().toLowerCase();
+
+  if (isRecommendationRequest(normalizedText)) {
+    return createRecommendationExpression(scenario);
+  }
 
   if (normalizedText.includes("taxi")) {
     return "I prefer taking a taxi because it is faster and more convenient.";
@@ -251,13 +279,40 @@ function parseCorrection(
     parsed.betterExpression.trim()
       ? parsed.betterExpression.trim()
       : fallback.betterExpression;
+  const shouldPreserveRecommendation =
+    isRecommendationRequest(original) &&
+    !keepsRecommendationMeaning(betterExpression || corrected);
+  const recommendedExpression = shouldPreserveRecommendation
+    ? createRecommendationExpression(scenario)
+    : betterExpression;
   const meaningfulReason = mentionsWrittenFormatting(reason)
     ? createMeaningfulReason({
         original,
-        recommended: betterExpression || corrected,
+        recommended: recommendedExpression || corrected,
         fallbackReason: fallback.reason,
       })
     : reason;
+  const scoresWithFormattingFloor = {
+    grammar: Math.max(82, clampScore(scores.grammar)),
+    fluency: Math.max(78, clampScore(scores.fluency)),
+    vocabulary: Math.max(78, clampScore(scores.vocabulary)),
+    pronunciation: Math.max(80, clampScore(scores.pronunciation)),
+  };
+
+  if (shouldPreserveRecommendation) {
+    return {
+      original,
+      corrected: recommendedExpression,
+      reason: createMeaningfulReason({
+        original,
+        recommended: recommendedExpression,
+        fallbackReason:
+          "这句话可以理解。这里是在询问推荐内容，推荐表达需要保持“询问推荐”的意思。",
+      }),
+      betterExpression: recommendedExpression,
+      scores: scoresWithFormattingFloor,
+    } satisfies Correction;
+  }
 
   if (differsOnlyByWrittenFormatting(original, corrected)) {
     return {
@@ -265,17 +320,12 @@ function parseCorrection(
       corrected: original,
       reason: createMeaningfulReason({
         original,
-        recommended: betterExpression,
+        recommended: recommendedExpression,
         fallbackReason:
           "这句话可以理解。作为口语回答已经能表达意思，也可以进一步补充具体需求或原因。",
       }),
-      betterExpression,
-      scores: {
-        grammar: Math.max(84, clampScore(scores.grammar)),
-        fluency: Math.max(80, clampScore(scores.fluency)),
-        vocabulary: Math.max(78, clampScore(scores.vocabulary)),
-        pronunciation: Math.max(80, clampScore(scores.pronunciation)),
-      },
+      betterExpression: recommendedExpression,
+      scores: scoresWithFormattingFloor,
     } satisfies Correction;
   }
 
@@ -283,13 +333,15 @@ function parseCorrection(
     original,
     corrected,
     reason: meaningfulReason,
-    betterExpression,
-    scores: {
-      grammar: clampScore(scores.grammar),
-      fluency: clampScore(scores.fluency),
-      vocabulary: clampScore(scores.vocabulary),
-      pronunciation: clampScore(scores.pronunciation),
-    },
+    betterExpression: recommendedExpression,
+    scores: mentionsWrittenFormatting(reason)
+      ? scoresWithFormattingFloor
+      : {
+          grammar: clampScore(scores.grammar),
+          fluency: clampScore(scores.fluency),
+          vocabulary: clampScore(scores.vocabulary),
+          pronunciation: clampScore(scores.pronunciation),
+        },
   } satisfies Correction;
 }
 

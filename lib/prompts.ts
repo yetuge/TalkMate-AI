@@ -71,6 +71,8 @@ export function buildCorrectionPrompt({
     "- corrected should be the single final recommended sentence for the learner to say next.",
     "- corrected should combine necessary grammar fixes and natural spoken wording; do not provide a separate purely formal rewrite.",
     "- betterExpression should usually match corrected exactly. Only make it different when there is a genuinely better scenario-specific version.",
+    "- Preserve the learner's speech act and intent: a question should remain a question, a request should remain a request, and a preference should remain a preference.",
+    "- Do not change a recommendation question into a preference statement.",
     "- corrected should fix grammar, word choice, word order, or completeness only when they affect spoken communication.",
     "- For short but understandable answers, do not mark them as wrong; expand them into a complete natural spoken sentence.",
     "- reason should be short, clear, written in Chinese, and focus on communication or spoken fluency.",
