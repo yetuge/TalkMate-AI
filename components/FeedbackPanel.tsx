@@ -8,6 +8,10 @@ type FeedbackPanelProps = {
   isLoading?: boolean;
 };
 
+function getRecommendedExpression(feedback: Correction) {
+  return feedback.betterExpression.trim() || feedback.corrected;
+}
+
 export function FeedbackPanel({ feedback, isLoading = false }: FeedbackPanelProps) {
   if (isLoading) {
     return (
@@ -45,11 +49,13 @@ export function FeedbackPanel({ feedback, isLoading = false }: FeedbackPanelProp
           </div>
         </div>
         <div className="mt-6 rounded-lg border bg-muted/50 p-4 text-sm leading-6 text-muted-foreground">
-          反馈将包含原句、修改后句子、错误原因、更自然表达和评分明细。
+          反馈将包含原句、推荐表达、原因和评分明细。
         </div>
       </aside>
     );
   }
+
+  const recommendedExpression = getRecommendedExpression(feedback);
 
   return (
     <aside className="flex h-full flex-col rounded-lg border bg-card p-5 text-card-foreground shadow-sm">
@@ -73,10 +79,10 @@ export function FeedbackPanel({ feedback, isLoading = false }: FeedbackPanelProp
 
         <section className="rounded-lg border bg-secondary/10 p-4">
           <p className="text-xs font-bold uppercase text-secondary">
-            修改后
+            推荐表达
           </p>
           <p className="mt-2 text-sm font-semibold leading-6">
-            {feedback.corrected}
+            {recommendedExpression}
           </p>
         </section>
 
@@ -87,13 +93,6 @@ export function FeedbackPanel({ feedback, isLoading = false }: FeedbackPanelProp
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
             {feedback.reason}
           </p>
-        </section>
-
-        <section className="rounded-lg border bg-background p-4">
-          <p className="text-xs font-bold uppercase text-muted-foreground">
-            更自然表达
-          </p>
-          <p className="mt-2 text-sm leading-6">{feedback.betterExpression}</p>
         </section>
       </div>
 
