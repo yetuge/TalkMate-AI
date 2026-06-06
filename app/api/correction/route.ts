@@ -39,11 +39,43 @@ function differsOnlyByWrittenFormatting(original: string, corrected: string) {
   );
 }
 
+function isAffirmativeAnswer(text: string) {
+  return /^(yes|yeah|yep|sure|ok|okay|please|yesplease|yespleas)$/u.test(
+    normalizeMeaningText(text),
+  );
+}
+
+function isNegativeAnswer(text: string) {
+  return /^(no|nope|notnow|nothanks|nothankyou)$/u.test(
+    normalizeMeaningText(text),
+  );
+}
+
 function createScenarioExpansion(text: string, scenario?: Scenario) {
   const normalizedText = text.trim().toLowerCase();
 
   if (normalizedText.includes("taxi")) {
     return "I prefer taking a taxi because it is faster and more convenient.";
+  }
+
+  if (isAffirmativeAnswer(normalizedText)) {
+    if (scenario?.id === "travel") {
+      return "Yes, please. Could you help me arrange that?";
+    }
+
+    if (scenario?.id === "restaurant-ordering") {
+      return "Yes, please. I would like that.";
+    }
+
+    if (scenario?.id === "job-interview") {
+      return "Yes, I would be happy to explain.";
+    }
+
+    return "Yes, please. That would be helpful.";
+  }
+
+  if (isNegativeAnswer(normalizedText)) {
+    return "No, thank you. I would prefer another option.";
   }
 
   if (scenario?.id === "job-interview") {
@@ -74,7 +106,7 @@ function createFallbackCorrection(text: string, scenario?: Scenario): Correction
     original: trimmedText,
     corrected: isShortAnswer ? spokenExpansion : trimmedText,
     reason:
-      "这句话可以理解。口语练习中不用重点纠结大小写或标点，建议把回答补充成更完整、自然的一句话。",
+      "这句话可以理解。作为口语回答，它还可以补充具体需求或原因，让对话更完整自然。",
     betterExpression: spokenExpansion,
     scores: {
       grammar: 84,
@@ -130,7 +162,7 @@ function parseCorrection(
       original,
       corrected: original,
       reason:
-        "这句话可以理解。口语练习中不用重点纠结大小写或标点，重点可以放在表达是否完整自然。",
+        "这句话可以理解。作为口语回答已经能表达意思，也可以进一步补充具体需求或原因。",
       betterExpression,
       scores: {
         grammar: Math.max(84, clampScore(scores.grammar)),
