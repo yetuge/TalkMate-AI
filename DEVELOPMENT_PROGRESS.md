@@ -20,9 +20,9 @@ TalkMate AI 是一个 Web 端 AI 英语口语陪练 MVP。目标用户流程如�
 
 ## 当前状态
 
-当前阶段：**Step 18 已完成**
+当前阶段：**Step 19 开发中**
 
-项目已经初始化为一个最小可运行的 Next.js 应用，完成基础场景数据、主要页面路由占位、首页与场景选择页、练习页基础 UI、浏览器语音识别 Hook、AI 对话 API、即时纠错 API、课后报告 API、Supabase 历史记录保存、历史记录页和报告详情读取，并优化 UI 状态展示、AI 回复流式输出、中文界面文案、流式渲染节奏、长对话布局、AI 回复语音播放、聊天区条件跟随滚动和语音播放错误提示体验。
+项目已经初始化为一个最小可运行的 Next.js 应用，完成基础场景数据、主要页面路由占位、首页与场景选择页、练习页基础 UI、浏览器语音识别 Hook、AI 对话 API、即时纠错 API、课后报告 API、Supabase 历史记录保存、历史记录页和报告详情读取，并优化 UI 状态展示、AI 回复流式输出、中文界面文案、流式渲染节奏、长对话布局、AI 回复语音播放、聊天区条件跟随滚动和语音播放错误提示体验。当前正在优化实时纠错质量，让反馈更符合口语练习场景。
 
 ## 已完成工作
 
@@ -311,6 +311,18 @@ TalkMate AI 是一个 Web 端 AI 英语口语陪练 MVP。目标用户流程如�
 - `useSpeechSynthesis` 增强播放状态管理，避免旧 utterance 的结束或错误事件影响当前播放状态。
 - 播放前清理 pending speak timer，并延迟短时间执行 `speechSynthesis.speak`，降低 cancel 后立即播放导致的中断概率。
 - 监听浏览器 `voiceschanged`，在语音列表加载后更稳定地选择英文语音。
+
+### Step 19：优化实时纠错的口语反馈质量
+
+状态：**开发中**
+
+已完成内容：
+
+- 优化即时纠错 Prompt，明确按口语练习而不是书面作文批改。
+- 要求 AI 忽略大小写、标点、逗号空格和句号缺失等纯书面格式问题。
+- 要求短回答不强行判错，而是扩展成完整自然的口语表达。
+- 后端解析纠错结果时识别“只改大小写或标点”的情况，避免把这类格式差异作为主要反馈。
+- 优化 fallback 纠错内容，默认强调口语表达完整度，不再补充基础标点作为纠错理由。
 
 主要新增文件：
 
@@ -650,6 +662,18 @@ http://localhost:3000/practice?scenario=job-interview
 - 连续发送多轮消息时，上一段播放不会影响当前播放状态。
 - 浏览器可用英文语音加载后，AI 回复朗读更稳定。
 
+Step 19 API 验证重点：
+
+```text
+POST http://localhost:3000/api/correction
+```
+
+需要确认：
+
+- `hello,what is your name?` 这类文本不会再把首字母大小写、逗号空格作为主要错误。
+- `taxi` 这类短回答会被引导扩展成自然完整的口语句子。
+- 真实语法、用词、词序或表达完整度问题仍会正常给出纠错建议。
+
 Step 7 API 验证重点：
 
 ```text
@@ -902,6 +926,16 @@ supabase/
 - 减少 SpeechSynthesis 取消后立刻播放导致的异常。
 - 避免旧播放事件干扰当前朗读状态。
 
+### Step 19：优化实时纠错的口语反馈质量
+
+状态：**开发中**
+
+目标：
+
+- 让即时反馈更关注口语表达是否自然、完整、易理解。
+- 避免把大小写、标点、逗号空格等语音识别文本格式问题当作主要错误。
+- 对简短回答给出可直接跟读的完整表达。
+
 ## 建议提交计划
 
 为了满足比赛要求中的持续开发记录，建议每个 Step 单独提交，并尽量对应单独 PR。
@@ -1014,6 +1048,12 @@ feat: add conditional chat autoscroll
 fix: improve speech playback notice handling
 ```
 
+建议第十九个 PR 标题：
+
+```text
+feat: improve instant feedback speaking focus
+```
+
 建议第一个 PR 描述：
 
 ```text
@@ -1037,4 +1077,4 @@ fix: improve speech playback notice handling
 
 ## 下一步
 
-完成 Step 18 PR 后，继续拆分 README、Demo 指南和最终 polish PR。
+完成 Step 19 PR 后，继续拆分 README、Demo 指南和最终 polish PR。

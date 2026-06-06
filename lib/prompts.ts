@@ -50,12 +50,17 @@ export function buildCorrectionPrompt(text: string, scenario: Scenario) {
     "}",
     "Rules:",
     "- original must be the learner sentence.",
-    "- corrected should fix grammar and wording while preserving meaning.",
-    "- reason should be short, clear, and written in Chinese.",
-    "- betterExpression should sound natural in the current scenario.",
-    "- If the sentence is already good, say it is good and still provide a more natural expression.",
+    "- Treat this as spoken English feedback, not written essay proofreading.",
+    "- Ignore capitalization, punctuation, comma spacing, and other written formatting issues unless they change meaning.",
+    "- Do not mention capitalization, punctuation, comma spacing, or missing periods as the main reason.",
+    "- corrected should fix grammar, word choice, word order, or completeness only when they affect spoken communication.",
+    "- For short but understandable answers, do not mark them as wrong; expand them into a complete natural spoken sentence.",
+    "- reason should be short, clear, written in Chinese, and focus on communication or spoken fluency.",
+    "- betterExpression should sound natural in the current scenario and be useful as the learner's next spoken answer.",
+    "- If the sentence is already understandable, say it is understandable and provide a more complete or natural expression.",
     "- Scores must be integers from 0 to 100.",
-    "- Pronunciation is estimated from text fluency because no real audio is available.",
+    "- Do not lower scores only because of written formatting.",
+    "- Pronunciation is estimated from text fluency because no real audio is available; do not claim to hear real pronunciation.",
   ].join("\n");
 }
 

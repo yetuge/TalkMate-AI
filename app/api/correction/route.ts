@@ -3,7 +3,7 @@ import { createAiClient, aiConfig } from "@/lib/ai";
 import { parseJsonObject } from "@/lib/json";
 import { buildCorrectionPrompt } from "@/lib/prompts";
 import { getScenarioById } from "@/lib/scenarios";
-import type { Correction, ScoreBreakdown } from "@/lib/types";
+import type { Correction, Scenario, ScoreBreakdown } from "@/lib/types";
 
 export const runtime = "nodejs";
 
@@ -20,22 +20,67 @@ function clampScore(value: unknown) {
   return Math.max(0, Math.min(100, Math.round(value)));
 }
 
-function createFallbackCorrection(text: string): Correction {
+function countWords(text: string) {
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
+function normalizeMeaningText(text: string) {
+  return text.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
+}
+
+function differsOnlyByWrittenFormatting(original: string, corrected: string) {
+  const normalizedOriginal = normalizeMeaningText(original);
+  const normalizedCorrected = normalizeMeaningText(corrected);
+
+  return (
+    normalizedOriginal.length > 0 &&
+    normalizedOriginal === normalizedCorrected &&
+    original.trim() !== corrected.trim()
+  );
+}
+
+function createScenarioExpansion(text: string, scenario?: Scenario) {
+  const normalizedText = text.trim().toLowerCase();
+
+  if (normalizedText.includes("taxi")) {
+    return "I prefer taking a taxi because it is faster and more convenient.";
+  }
+
+  if (scenario?.id === "job-interview") {
+    return "I have relevant experience, and I can explain it with a specific example.";
+  }
+
+  if (scenario?.id === "restaurant-ordering") {
+    return "I would like to order this, please.";
+  }
+
+  if (scenario?.id === "business-meeting") {
+    return "I think this option works well because it is clear and practical.";
+  }
+
+  if (scenario?.id === "travel") {
+    return "I prefer this option because it is more convenient for me.";
+  }
+
+  return "I would like to explain my answer with one clear example and one specific detail.";
+}
+
+function createFallbackCorrection(text: string, scenario?: Scenario): Correction {
   const trimmedText = text.trim();
-  const corrected = trimmedText.endsWith(".") ? trimmedText : `${trimmedText}.`;
+  const isShortAnswer = countWords(trimmedText) <= 3;
+  const spokenExpansion = createScenarioExpansion(trimmedText, scenario);
 
   return {
     original: trimmedText,
-    corrected,
+    corrected: isShortAnswer ? spokenExpansion : trimmedText,
     reason:
-      "这句话可以理解。备用纠错已补充基础标点，并尽量保持原意清晰。",
-    betterExpression:
-      "I would like to explain my answer with one clear example and one specific detail.",
+      "这句话可以理解。口语练习中不用重点纠结大小写或标点，建议把回答补充成更完整、自然的一句话。",
+    betterExpression: spokenExpansion,
     scores: {
-      grammar: 78,
-      fluency: 76,
-      vocabulary: 74,
-      pronunciation: 75,
+      grammar: 84,
+      fluency: 80,
+      vocabulary: 78,
+      pronunciation: 80,
     },
   };
 }
@@ -51,30 +96,56 @@ function isScoreBreakdown(value: unknown): value is ScoreBreakdown {
   );
 }
 
-function parseCorrection(rawContent: string, originalText: string) {
+function parseCorrection(
+  rawContent: string,
+  originalText: string,
+  scenario: Scenario,
+) {
   const parsed = parseJsonObject<Correction>(rawContent);
+  const fallback = createFallbackCorrection(originalText, scenario);
   const scores = isScoreBreakdown(parsed.scores)
     ? parsed.scores
-    : createFallbackCorrection(originalText).scores;
+    : fallback.scores;
+
+  const original =
+    typeof parsed.original === "string" && parsed.original.trim()
+      ? parsed.original.trim()
+      : originalText;
+  const corrected =
+    typeof parsed.corrected === "string" && parsed.corrected.trim()
+      ? parsed.corrected.trim()
+      : fallback.corrected;
+  const reason =
+    typeof parsed.reason === "string" && parsed.reason.trim()
+      ? parsed.reason.trim()
+      : fallback.reason;
+  const betterExpression =
+    typeof parsed.betterExpression === "string" &&
+    parsed.betterExpression.trim()
+      ? parsed.betterExpression.trim()
+      : fallback.betterExpression;
+
+  if (differsOnlyByWrittenFormatting(original, corrected)) {
+    return {
+      original,
+      corrected: original,
+      reason:
+        "这句话可以理解。口语练习中不用重点纠结大小写或标点，重点可以放在表达是否完整自然。",
+      betterExpression,
+      scores: {
+        grammar: Math.max(84, clampScore(scores.grammar)),
+        fluency: Math.max(80, clampScore(scores.fluency)),
+        vocabulary: Math.max(78, clampScore(scores.vocabulary)),
+        pronunciation: Math.max(80, clampScore(scores.pronunciation)),
+      },
+    } satisfies Correction;
+  }
 
   return {
-    original:
-      typeof parsed.original === "string" && parsed.original.trim()
-        ? parsed.original.trim()
-        : originalText,
-    corrected:
-      typeof parsed.corrected === "string" && parsed.corrected.trim()
-        ? parsed.corrected.trim()
-        : createFallbackCorrection(originalText).corrected,
-    reason:
-      typeof parsed.reason === "string" && parsed.reason.trim()
-        ? parsed.reason.trim()
-        : createFallbackCorrection(originalText).reason,
-    betterExpression:
-      typeof parsed.betterExpression === "string" &&
-      parsed.betterExpression.trim()
-        ? parsed.betterExpression.trim()
-        : createFallbackCorrection(originalText).betterExpression,
+    original,
+    corrected,
+    reason,
+    betterExpression,
     scores: {
       grammar: clampScore(scores.grammar),
       fluency: clampScore(scores.fluency),
@@ -117,7 +188,7 @@ export async function POST(request: Request) {
 
   if (!ai) {
     return NextResponse.json({
-      ...createFallbackCorrection(text),
+      ...createFallbackCorrection(text, scenario),
       provider: "fallback",
     });
   }
@@ -144,20 +215,20 @@ export async function POST(request: Request) {
 
     if (!content) {
       return NextResponse.json({
-        ...createFallbackCorrection(text),
+        ...createFallbackCorrection(text, scenario),
         provider: "fallback",
       });
     }
 
     return NextResponse.json({
-      ...parseCorrection(content, text),
+      ...parseCorrection(content, text, scenario),
       provider: "deepseek",
     });
   } catch (error) {
     console.error("Correction API failed", error);
 
     return NextResponse.json({
-      ...createFallbackCorrection(text),
+      ...createFallbackCorrection(text, scenario),
       provider: "fallback",
     });
   }
