@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -79,6 +79,7 @@ type CorrectionResult = {
 };
 
 const STREAM_RENDER_FLUSH_INTERVAL_MS = 45;
+const CHAT_AUTO_SCROLL_THRESHOLD_PX = 120;
 
 function parseSseBlock(block: string) {
   const lines = block.split(/\r?\n/);
@@ -251,6 +252,8 @@ async function fetchCorrectionFeedback(
 
 export function PracticeRoom({ scenario }: PracticeRoomProps) {
   const router = useRouter();
+  const chatScrollAreaRef = useRef<HTMLDivElement | null>(null);
+  const shouldFollowChatRef = useRef(true);
   const scenarioLabel = getScenarioLabel(scenario.id);
   const openingMessage = useMemo(
     () => createMessage("assistant", scenario.openingQuestion),
@@ -281,6 +284,48 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
     stop: stopSpeaking,
   } = useSpeechSynthesis({ lang: "en-US" });
 
+  const isChatNearBottom = useCallback(() => {
+    const scrollArea = chatScrollAreaRef.current;
+
+    if (!scrollArea) {
+      return true;
+    }
+
+    return (
+      scrollArea.scrollHeight - scrollArea.scrollTop - scrollArea.clientHeight <=
+      CHAT_AUTO_SCROLL_THRESHOLD_PX
+    );
+  }, []);
+
+  const scrollChatToBottom = useCallback(() => {
+    const scrollArea = chatScrollAreaRef.current;
+
+    if (!scrollArea) {
+      return;
+    }
+
+    scrollArea.scrollTo({
+      top: scrollArea.scrollHeight,
+      behavior: "auto",
+    });
+  }, []);
+
+  const handleChatScroll = useCallback(() => {
+    shouldFollowChatRef.current = isChatNearBottom();
+  }, [isChatNearBottom]);
+
+  useEffect(() => {
+    if (!shouldFollowChatRef.current) {
+      return;
+    }
+
+    const frameId = window.requestAnimationFrame(scrollChatToBottom);
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+    };
+  }, [messages, isSpeaking, scrollChatToBottom]);
+
   function handleStartRecording() {
     stopSpeaking();
     startRecording();
@@ -295,6 +340,7 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
 
     stopRecording();
     stopSpeaking();
+    shouldFollowChatRef.current = true;
 
     const userMessage = createMessage("user", text);
     const assistantMessage = createMessage("assistant", "");
@@ -519,7 +565,11 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
             </div>
           </div>
 
-          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5">
+          <div
+            className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5"
+            onScroll={handleChatScroll}
+            ref={chatScrollAreaRef}
+          >
             {messages.map((message) => (
               <ChatMessage message={message} key={message.id} />
             ))}
