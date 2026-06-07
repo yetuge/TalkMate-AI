@@ -1,132 +1,147 @@
 # TalkMate AI
 
-TalkMate AI 是一个 Web 端 AI 英语口语陪练应用，目标是在浏览器中实现完整的口语练习闭环：
+TalkMate AI 是一个 Web 端 AI 英语口语陪练平台，面向英语学习者提供场景化对话练习、即时口语反馈、课后学习报告和历史记录追踪。
+
+项目目标是在浏览器中完成一条完整的口语练习闭环：
 
 ```text
-场景选择 -> 语音/文本输入 -> AI 英语对话 -> 即时纠错 -> 课后报告 -> 历史记录
+选择练习场景 -> 语音/文本输入 -> AI 英语对话 -> 即时反馈 -> 课后报告 -> 历史记录
 ```
 
-## GitHub 仓库
+## Demo
 
-https://github.com/yetuge/TalkMate-AI
+- GitHub 仓库：https://github.com/yetuge/TalkMate-AI
+- Demo 视频：https://www.bilibili.com/video/BV1G1Ex6VE1J/?vd_source=2a9e89e2b1a2a2616c6fe2b964e9bd8c
+- Demo 指南：[DEMO_GUIDE.md](./DEMO_GUIDE.md)
+- 开发进度：[DEVELOPMENT_PROGRESS.md](./DEVELOPMENT_PROGRESS.md)
+
+## 核心功能
+
+- 场景化口语练习：支持面试、点餐、商务会议、旅行出行等常见英文交流场景。
+- AI 实时对话：根据不同场景 Prompt 引导 AI 扮演面试官、服务员、同事或旅行助手。
+- SSE 流式回复：AI 回复逐步输出，并通过前端缓冲优化渲染节奏。
+- 语音输入：接入浏览器 Web Speech API，支持语音识别为文本。
+- AI 语音播放：使用浏览器 SpeechSynthesis 朗读 AI 英文回复。
+- 即时反馈：根据上一轮 AI 提问和用户最新回答，给出原句、推荐表达、原因和多维评分。
+- 上下文判断：短回答在当前对话中成立时，不强行扩写，也不编造用户没有表达过的原因、态度或偏好。
+- 课后报告：基于真实对话和即时反馈生成总结、常见问题、改进建议、练习句子和口语任务。
+- 历史记录：练习数据优先保存到 Supabase，未配置时使用 localStorage 兜底。
 
 ## 技术栈
 
 - Next.js App Router
 - React
 - TypeScript
-- TailwindCSS
+- Tailwind CSS
 - shadcn/ui
 - Supabase
 - DeepSeek API
 
-## 当前进度
-
-- Step 1：初始化项目结构和依赖，已完成。
-- Step 2：实现场景数据和页面路由，已完成。
-- Step 3：实现首页和场景选择页，已完成。
-- Step 4：实现练习页基础 UI，已完成。
-- Step 5：实现 Web Speech API 语音识别 Hook，已完成。
-- Step 6：实现 AI 对话 API，已完成。
-- Step 7：实现即时纠错 API，已完成。
-- Step 8：实现课后报告 API，已完成。
-- Step 9：实现 Supabase 历史记录保存，已完成。
-- Step 10：实现历史记录页和报告详情读取，已完成。
-- Step 11：优化 UI、Loading、错误处理和空状态，已完成。
-- Step 12：实现 SSE 流式 AI 回复，已完成。
-- Step 13：中文化主要界面文案，已完成。
-- Step 14：优化 SSE 流式回复的前端缓冲渲染，已完成。
-- Step 15：优化练习页长对话布局，已完成。
-- Step 16：实现 AI 回复语音播放，已完成。
-- Step 17：实现聊天区条件跟随滚动，已完成。
-- Step 18：修复语音播放提示和稳定性，已完成。
-- Step 19：优化实时纠错的口语反馈质量，已完成。
-- Step 20：优化课后报告 Prompt 质量，已完成。
-- Step 21：补充 Demo 演示指南，开发中。
-
-详细记录见 [DEVELOPMENT_PROGRESS.md](./DEVELOPMENT_PROGRESS.md)。
-
-Demo 录制和评审复现步骤见 [DEMO_GUIDE.md](./DEMO_GUIDE.md)。
-
 ## 本地运行
 
+安装依赖：
+
 ```bash
-npm.cmd install
-npm.cmd run dev -- -p 3000
+npm install
 ```
 
-访问地址：
+复制环境变量文件：
+
+```text
+.env.example -> .env.local
+```
+
+填写必要环境变量后启动项目：
+
+```bash
+npm run dev
+```
+
+访问：
 
 ```text
 http://localhost:3000
 ```
 
-## 已有路由
-
-```text
-/
-/scenarios
-/practice?scenario=job-interview
-/history
-/report/demo-session
-/api/chat
-/api/chat/stream
-/api/correction
-/api/report
-```
-
-## 当前可用流程
-
-```text
-打开首页 -> 点击 Start Practice -> 选择场景 -> 进入练习页 -> 语音识别或手动输入 -> 发送文本 -> 获取 AI 英文回复 -> 查看即时纠错反馈 -> 结束练习 -> 查看课后报告
-```
-
-说明：当前练习页已经接入浏览器 Web Speech API 语音识别，并通过 `/api/chat` 调用 DeepSeek API 生成 AI 回复，通过 `/api/correction` 生成即时纠错反馈，通过 `/api/report` 生成课后报告。报告暂存于 localStorage，Supabase 历史记录将在后续步骤接入。
-
-Step 9 已新增 Supabase 保存接口。配置 Supabase 后，练习结束会保存 session、messages 和 corrections；未配置时继续使用 localStorage 兜底。
-
-Step 10 已实现历史记录页。历史页会优先读取 Supabase 练习记录；未配置 Supabase 或本地演示时，会读取 localStorage 中的报告记录。
-
-Step 11 已统一练习页、历史页和报告页的加载、错误、fallback 和空状态展示。
-
-Step 12 已新增 SSE 流式对话接口。练习页发送文本后，AI 回复会逐步输出到同一条消息气泡中；即时纠错仍然并行生成，保证对话体验更自然。
-
-Step 13 已将主要页面、按钮、状态提示、反馈面板和报告栏目改为中文展示；英文对话内容、纠错后的英文句子和练习句子仍保留英文，便于继续进行口语训练。
-
-Step 14 已为 SSE 流式回复增加双缓冲处理。`sseBuffer` 用于拼接完整 SSE 消息，`renderBuffer` 用于按固定间隔批量刷新 token 到消息气泡中，降低 React 高频重渲染并让输出节奏更平滑。流式连接默认 15 秒超时，DeepSeek 网络异常时会快速进入 fallback 回复。
-
-Step 15 已优化练习页长对话布局。桌面端顶部场景栏保持可见，聊天内容在消息区内部滚动，底部输入控制区固定在练习卡片底部，右侧即时反馈面板保持 sticky，长对话时不再丢失关键操作入口。
-
-Step 16 已接入浏览器 SpeechSynthesis。AI 回复生成完成后会自动朗读英文回复；用户开始下一轮录音或结束练习时会停止当前播放，浏览器不支持语音播放时会显示提示并保留文字练习流程。
-
-Step 17 已优化聊天区滚动体验。用户位于消息底部附近时，新消息和流式回复会自动跟随到底部；如果用户手动向上查看历史消息，页面不会强制拉回底部。
-
-Step 18 已优化语音播放稳定性和提示交互。语音播放失败提示支持手动关闭，播放逻辑会避免旧播放事件影响当前状态，并在浏览器语音列表加载后更稳定地选择英文语音。
-
-Step 19 已优化实时纠错质量。即时反馈会参考上一轮 AI 提问，更关注口语交流中的语法、用词、完整度和自然度，不再把大小写、标点、逗号空格等书面格式问题作为主要纠错原因；较短但可理解的回答会结合上下文判断为有效短回答。反馈结构已调整为 `feedbackType`、`originalText`、`recommendedExpression`、`reason` 和 `scores`，前端只展示单一“推荐表达”，并要求推荐表达保持用户原意。
-
-Step 20 已优化课后报告质量。报告 Prompt 会基于真实对话和纠错记录生成总结，不再强制凑满常见问题；`CONTEXT_VALID` 反馈不会被当作错误，大小写、标点和空格等格式问题也不会进入常见问题。
-
-Step 21 正在补充 Demo 演示指南，说明本地环境、Supabase 建表、推荐录屏流程、测试输入和 fallback 说明。
-
 ## 环境变量
 
-复制 `.env.example` 为 `.env.local`，并按需填写：
-
-```text
+```env
 DEEPSEEK_API_KEY=
 DEEPSEEK_BASE_URL=https://api.deepseek.com
 DEEPSEEK_MODEL=deepseek-v4-flash
 DEEPSEEK_CHAT_STREAM_TIMEOUT_MS=15000
+
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 ```
 
-## Supabase 数据表
+说明：
+
+- DeepSeek 配置用于 AI 对话、即时反馈和课后报告生成。
+- Supabase 配置用于保存练习记录、对话消息和纠错反馈。
+- 未配置 Supabase 时，项目会使用 localStorage 作为备用存储。
+
+## Supabase 建表
 
 数据库建表 SQL 位于：
 
 ```text
 supabase/schema.sql
 ```
+
+在 Supabase 控制台中进入：
+
+```text
+SQL Editor -> New query
+```
+
+复制 `supabase/schema.sql` 内容并运行。建表成功后应包含：
+
+```text
+practice_sessions
+practice_messages
+practice_corrections
+```
+
+Demo 阶段可以选择 `Run without RLS`，便于快速复现完整流程。
+
+## 主要页面
+
+```text
+/                         首页
+/scenarios                场景选择
+/practice?scenario=travel 口语练习
+/history                  历史记录
+/report/[sessionId]       课后报告
+```
+
+## API 路由
+
+```text
+/api/chat/stream   SSE 流式 AI 对话
+/api/correction    即时反馈
+/api/report        课后报告
+/api/sessions      练习历史
+```
+
+## 推荐演示流程
+
+1. 打开首页，点击开始练习。
+2. 进入场景选择页，选择旅行出行。
+3. 在练习页输入或说出英文回答。
+4. 观察 AI 流式回复和右侧即时反馈。
+5. 输入带有代表性的错误句子，例如 `do you have any recommendation`。
+6. 查看推荐表达 `Do you have any recommendations?`。
+7. 输入上下文短回答，例如 `bus schedule, please`，观察系统不会强行扩写。
+8. 点击结束练习，生成课后报告。
+9. 进入历史记录页，查看 Supabase 保存的练习记录和报告。
+
+## 项目状态
+
+当前版本已经完成核心 MVP 和 Demo 所需功能：
+
+- 完整口语练习闭环已打通。
+- DeepSeek API、SSE、语音识别、语音播放已接入。
+- 即时反馈和课后报告 Prompt 已针对口语练习质量进行优化。
+- Supabase 历史记录已可用于演示和复现。

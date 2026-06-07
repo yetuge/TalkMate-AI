@@ -2,6 +2,12 @@
 
 本文档用于准备演示视频和评审复现流程。
 
+Demo 视频地址：
+
+```text
+https://www.bilibili.com/video/BV1G1Ex6VE1J/?vd_source=2a9e89e2b1a2a2616c6fe2b964e9bd8c
+```
+
 ## 演示目标
 
 展示 TalkMate AI 的完整口语练习闭环：
@@ -21,7 +27,7 @@
 本地安装依赖：
 
 ```bash
-npm.cmd install
+npm install
 ```
 
 复制环境变量：
@@ -78,7 +84,7 @@ practice_corrections
 ## 启动项目
 
 ```bash
-npm.cmd run dev -- -p 3000
+npm run dev
 ```
 
 访问：
