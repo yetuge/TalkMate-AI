@@ -42,7 +42,7 @@ TalkMate AI 是一个 Web 端 AI 英语口语陪练平台，面向英语学习�
 安装依赖：
 
 ```bash
-npm.cmd install
+npm install
 ```
 
 复制环境变量文件：
@@ -54,7 +54,7 @@ npm.cmd install
 填写必要环境变量后启动项目：
 
 ```bash
-npm.cmd run dev -- -p 3000
+npm run dev
 ```
 
 访问：
@@ -145,4 +145,3 @@ Demo 阶段可以选择 `Run without RLS`，便于快速复现完整流程。
 - DeepSeek API、SSE、语音识别、语音播放已接入。
 - 即时反馈和课后报告 Prompt 已针对口语练习质量进行优化。
 - Supabase 历史记录已可用于演示和复现。
-
