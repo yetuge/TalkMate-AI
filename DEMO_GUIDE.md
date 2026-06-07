@@ -27,7 +27,7 @@ https://www.bilibili.com/video/BV1G1Ex6VE1J/?vd_source=2a9e89e2b1a2a2616c6fe2b96
 本地安装依赖：
 
 ```bash
-npm.cmd install
+npm install
 ```
 
 复制环境变量：
@@ -84,7 +84,7 @@ practice_corrections
 ## 启动项目
 
 ```bash
-npm.cmd run dev -- -p 3000
+npm run dev
 ```
 
 访问：
