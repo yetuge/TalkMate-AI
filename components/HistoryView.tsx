@@ -2,11 +2,20 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ClipboardList, Plus } from "lucide-react";
+import {
+  BarChart3,
+  ClipboardList,
+  Clock3,
+  Database,
+  HardDrive,
+  Plus,
+  Sparkles,
+} from "lucide-react";
 import {
   HistoryItem,
   type HistorySessionSummary,
 } from "@/components/HistoryItem";
+import { SiteFooter, SiteNav } from "@/components/SiteChrome";
 import { StatusNotice } from "@/components/StatusNotice";
 import type { PracticeReport, ScenarioId } from "@/lib/types";
 
@@ -100,9 +109,7 @@ export function HistoryView() {
 
         setProvider("localStorage");
         setLocalSessions(readLocalSessions());
-        setNotice(
-          "历史记录接口暂时不可用，TalkMate 正在展示浏览器本地报告。",
-        );
+        setNotice("历史记录接口暂时不可用，TalkMate 正在展示浏览器本地报告。");
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -125,74 +132,163 @@ export function HistoryView() {
     return localSessions;
   }, [localSessions, remoteSessions]);
 
+  const stats = useMemo(() => {
+    const scored = sessions.filter(
+      (session) => typeof session.overallScore === "number",
+    );
+    const totalSeconds = sessions.reduce(
+      (sum, session) => sum + session.durationSeconds,
+      0,
+    );
+    const average =
+      scored.length > 0
+        ? Math.round(
+            scored.reduce(
+              (sum, session) => sum + (session.overallScore ?? 0),
+              0,
+            ) / scored.length,
+          )
+        : null;
+
+    return {
+      count: sessions.length,
+      average,
+      minutes: Math.round(totalSeconds / 60),
+    };
+  }, [sessions]);
+
   return (
-    <main className="min-h-screen bg-muted px-6 py-8">
-      <section className="mx-auto max-w-5xl">
-        <nav className="flex flex-wrap items-center justify-between gap-3">
-          <Link
-            className="inline-flex items-center gap-2 rounded-lg border bg-card px-4 py-2 text-sm font-bold text-card-foreground shadow-sm transition hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-            href="/"
-          >
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            TalkMate AI
-          </Link>
-          <Link
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground shadow-sm transition hover:translate-y-[-1px] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-            href="/scenarios"
-          >
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            新练习
-          </Link>
-        </nav>
+    <div className="surface-canvas min-h-screen">
+      <SiteNav />
 
-        <header className="mt-10 rounded-lg border bg-card p-6 shadow-sm">
-          <p className="text-sm font-bold uppercase text-secondary">
-            练习历史
-          </p>
-          <h1 className="mt-3 text-4xl font-black">回顾你的口语练习</h1>
-          <p className="mt-3 max-w-2xl leading-7 text-muted-foreground">
-            打开过往报告、比较练习得分，并在准备好后继续下一个场景。
-          </p>
-          <p className="mt-4 text-sm text-muted-foreground">
-            数据来源：{provider === "supabase" ? "Supabase" : "浏览器本地存储"}
-          </p>
-        </header>
-
-        <div className="mt-5 space-y-4">
-          {isLoading ? (
-            <StatusNotice title="正在加载练习历史" tone="loading" />
-          ) : null}
-
-          {!isLoading && notice ? (
-            <StatusNotice
-              title="本地备用记录已启用"
-              description={notice}
-              tone="info"
-            />
-          ) : null}
-
-          {!isLoading && sessions.length === 0 ? (
-            <section className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
-              <ClipboardList className="h-10 w-10 text-primary" aria-hidden="true" />
-              <h2 className="mt-5 text-2xl font-black">暂无练习历史</h2>
-              <p className="mt-3 leading-7 text-muted-foreground">
-                完成一次练习后，系统会生成报告并显示在这里。
+      <main className="px-6 py-12">
+        <section className="mx-auto max-w-6xl">
+          <div className="flex flex-wrap items-end justify-between gap-6">
+            <div className="animate-rise">
+              <span className="badge-pill">
+                <Sparkles className="h-4 w-4" aria-hidden="true" />
+                练习历史
+              </span>
+              <h1 className="mt-5 text-4xl font-extrabold sm:text-5xl">
+                回顾你的
+                <span className="text-gradient">口语练习</span>
+              </h1>
+              <p className="mt-4 max-w-2xl leading-7 text-muted-foreground">
+                打开过往报告、比较每个场景的得分，并在准备好后继续下一个场景。
               </p>
-              <Link
-                className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-bold text-primary-foreground shadow-sm transition hover:translate-y-[-1px] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                href="/scenarios"
-              >
-                <Plus className="h-4 w-4" aria-hidden="true" />
-                开始练习
-              </Link>
-            </section>
-          ) : null}
+            </div>
 
-          {sessions.map((session) => (
-            <HistoryItem session={session} key={session.id} />
-          ))}
-        </div>
-      </section>
-    </main>
+            <Link
+              className="btn-primary animate-rise animation-delay-200 h-11 px-5 text-sm"
+              href="/scenarios"
+            >
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              新的练习
+            </Link>
+          </div>
+
+          <div className="mt-10 grid gap-4 sm:grid-cols-3">
+            <StatCard
+              icon={BarChart3}
+              label="累计练习"
+              unit="次"
+              value={stats.count}
+            />
+            <StatCard
+              icon={Sparkles}
+              label="平均总分"
+              value={stats.average ?? "--"}
+            />
+            <StatCard
+              icon={Clock3}
+              label="累计时长"
+              unit="分钟"
+              value={stats.minutes}
+            />
+          </div>
+
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <span className="inline-flex items-center gap-2 rounded-lg border bg-card px-3 py-1.5 text-xs font-semibold text-muted-foreground">
+              {provider === "supabase" ? (
+                <Database className="h-3.5 w-3.5 text-secondary" aria-hidden="true" />
+              ) : (
+                <HardDrive className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
+              数据来源：{provider === "supabase" ? "Supabase" : "浏览器本地存储"}
+            </span>
+          </div>
+
+          <div className="mt-6 space-y-4">
+            {isLoading ? (
+              <StatusNotice title="正在加载练习历史" tone="loading" />
+            ) : null}
+
+            {!isLoading && notice ? (
+              <StatusNotice
+                title="本地备用记录已启用"
+                description={notice}
+                tone="info"
+              />
+            ) : null}
+
+            {!isLoading && sessions.length === 0 ? (
+              <section className="card-surface p-10 text-center">
+                <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-soft text-primary">
+                  <ClipboardList className="h-7 w-7" aria-hidden="true" />
+                </span>
+                <h2 className="mt-5 text-2xl font-extrabold">暂无练习历史</h2>
+                <p className="mx-auto mt-3 max-w-md leading-7 text-muted-foreground">
+                  完成一次练习后，系统会生成课后报告并显示在这里，方便你对比每次的表现。
+                </p>
+                <Link
+                  className="btn-primary mt-6 h-11 px-5 text-sm"
+                  href="/scenarios"
+                >
+                  <Plus className="h-4 w-4" aria-hidden="true" />
+                  开始第一次练习
+                </Link>
+              </section>
+            ) : null}
+
+            {sessions.map((session) => (
+              <HistoryItem session={session} key={session.id} />
+            ))}
+          </div>
+        </section>
+      </main>
+
+      <SiteFooter />
+    </div>
+  );
+}
+
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  unit,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: number | string;
+  unit?: string;
+}) {
+  return (
+    <div className="card-surface flex items-center gap-4 p-5">
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary">
+        <Icon className="h-5 w-5" />
+      </span>
+      <div>
+        <p className="text-sm text-muted-foreground">{label}</p>
+        <p className="mt-0.5 text-2xl font-extrabold tabular-nums">
+          {value}
+          {unit ? (
+            <span className="ml-1 text-sm font-bold text-muted-foreground">
+              {unit}
+            </span>
+          ) : null}
+        </p>
+      </div>
+    </div>
   );
 }
