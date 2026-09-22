@@ -7,17 +7,18 @@ import {
   ArrowLeft,
   Bot,
   Clock3,
-  MessageSquareText,
+  MessagesSquare,
   Volume2,
 } from "lucide-react";
 import { ChatMessage } from "@/components/ChatMessage";
 import { FeedbackPanel } from "@/components/FeedbackPanel";
+import { PracticeHeader } from "@/components/PracticeHeader";
 import { StatusNotice } from "@/components/StatusNotice";
 import { VoiceRecorder } from "@/components/VoiceRecorder";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
 import { withLegacyCorrectionFields } from "@/lib/corrections";
-import { difficultyLabels, getScenarioLabel } from "@/lib/labels";
+import { getScenarioLabel } from "@/lib/labels";
 import type {
   ChatMessage as ChatMessageType,
   Correction,
@@ -269,6 +270,7 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [currentFeedback, setCurrentFeedback] = useState<Correction>();
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const {
     transcript,
     isRecording,
@@ -286,6 +288,16 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
     speak,
     stop: stopSpeaking,
   } = useSpeechSynthesis({ lang: "en-US" });
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setElapsedSeconds(Math.floor((Date.now() - startedAt.getTime()) / 1000));
+    }, 1000);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [startedAt]);
 
   const isChatNearBottom = useCallback(() => {
     const scrollArea = chatScrollAreaRef.current;
@@ -334,7 +346,7 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
     startRecording();
   }
 
-  async function handleSend() {
+  const handleSend = useCallback(async () => {
     const text = transcript.trim();
 
     if (!text) {
@@ -437,14 +449,35 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
         ...currentCorrections,
         correctionResult.correction,
       ]);
-      setErrorMessage(
-        "AI 服务暂时不可用，TalkMate 已使用本地备用回复。",
-      );
+      setErrorMessage("AI 服务暂时不可用，TalkMate 已使用本地备用回复。");
       speak(fallbackReply);
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [
+    messages,
+    resetTranscript,
+    scenario.id,
+    speak,
+    stopRecording,
+    stopSpeaking,
+    transcript,
+  ]);
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+        event.preventDefault();
+        void handleSend();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [handleSend]);
 
   async function handleEndPractice() {
     if (isEnding) {
@@ -504,9 +537,7 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
       const sessionId = savedSession.id ?? localSessionId;
 
       if (savedSession.provider === "localStorage") {
-        setStatusMessage(
-          "Supabase 未配置，本次报告已保存到当前浏览器本地。",
-        );
+        setStatusMessage("Supabase 未配置，本次报告已保存到当前浏览器本地。");
       }
 
       if (sessionId !== localSessionId) {
@@ -527,74 +558,67 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
     }
   }
 
+  const userTurnCount = messages.filter(
+    (message) => message.role === "user",
+  ).length;
+
   return (
     <main className="flex min-h-screen flex-col bg-muted lg:h-screen lg:overflow-hidden">
-      <header className="sticky top-0 z-30 shrink-0 border-b bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/85">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <Link
-              className="inline-flex h-10 w-10 items-center justify-center rounded-lg border bg-card text-card-foreground transition hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-              href="/scenarios"
-              title="返回场景选择"
-            >
-              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            </Link>
-            <div>
-              <p className="text-xs font-bold uppercase text-secondary">
-                {difficultyLabels[scenario.difficulty]}场景
-              </p>
-              <h1 className="text-xl font-black sm:text-2xl">
-                {scenarioLabel.title}
-              </h1>
-            </div>
-          </div>
+      <PracticeHeader
+        scenarioLabel={scenarioLabel}
+        difficulty={scenario.difficulty}
+        elapsedSeconds={elapsedSeconds}
+        isRecording={isRecording}
+      />
 
-          <div className="flex flex-wrap gap-2 text-sm">
-            <span className="inline-flex items-center gap-2 rounded-lg border bg-card px-3 py-2 font-semibold text-card-foreground">
-              <Bot className="h-4 w-4 text-primary" aria-hidden="true" />
-              {scenarioLabel.aiRole}
-            </span>
-            <span className="inline-flex items-center gap-2 rounded-lg border bg-card px-3 py-2 font-semibold text-card-foreground">
-              <Clock3 className="h-4 w-4 text-secondary" aria-hidden="true" />
-              00:00
-            </span>
-          </div>
-        </div>
-      </header>
-
-      <div className="mx-auto grid w-full max-w-7xl flex-1 gap-4 px-4 py-4 lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_360px] lg:overflow-hidden">
-        <section className="flex min-h-[640px] flex-col rounded-lg border bg-background shadow-sm lg:min-h-0">
-          <div className="shrink-0 flex items-center justify-between gap-3 border-b px-5 py-4">
-            <div>
-              <h2 className="text-lg font-bold">对话练习</h2>
-              <p className="text-sm text-muted-foreground">
-                请用英语回答，尽量保持简短自然。
-              </p>
+      <div className="mx-auto grid w-full max-w-7xl flex-1 gap-4 px-4 py-4 lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_380px] lg:overflow-hidden">
+        <section className="flex min-h-[640px] flex-col overflow-hidden rounded-2xl border bg-background shadow-sm lg:min-h-0">
+          <div className="flex shrink-0 items-center justify-between gap-3 border-b bg-muted/30 px-5 py-3.5">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-soft text-primary">
+                <MessagesSquare className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <div className="leading-tight">
+                <h2 className="text-base font-bold">对话练习</h2>
+                <p className="text-xs text-muted-foreground">
+                  请用英语回答，尽量保持简短自然
+                </p>
+              </div>
             </div>
-            <div className="flex items-center gap-2 rounded-lg bg-muted px-3 py-2 text-sm font-semibold text-muted-foreground">
-              <MessageSquareText className="h-4 w-4" aria-hidden="true" />
-              {messages.length} 轮对话
+
+            <div className="flex items-center gap-2">
+              <span className="hidden rounded-lg bg-background px-3 py-1.5 text-xs font-semibold tabular-nums text-muted-foreground sm:inline-flex">
+                {userTurnCount} 轮发言
+              </span>
+              {isSpeaking ? (
+                <span className="inline-flex items-center gap-1.5 rounded-lg border border-secondary/25 bg-secondary-soft px-2.5 py-1.5 text-xs font-semibold text-secondary">
+                  <Volume2 className="h-3.5 w-3.5" aria-hidden="true" />
+                  AI 朗读中
+                </span>
+              ) : null}
             </div>
           </div>
 
           <div
-            className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5"
+            className="scrollbar-slim min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5"
             onScroll={handleChatScroll}
             ref={chatScrollAreaRef}
           >
-            {messages.map((message) => (
-              <ChatMessage message={message} key={message.id} />
+            {messages.map((message, index) => (
+              <ChatMessage
+                isSpeaking={
+                  isSpeaking &&
+                  message.role === "assistant" &&
+                  index === messages.length - 1
+                }
+                key={message.id}
+                message={message}
+              />
             ))}
-            {isSpeaking ? (
-              <div className="inline-flex items-center gap-3 rounded-lg border bg-card px-4 py-3 text-sm font-semibold text-secondary shadow-sm">
-                <Volume2 className="h-4 w-4" aria-hidden="true" />
-                AI 正在朗读
-              </div>
-            ) : null}
           </div>
 
           <div className="sticky bottom-0 z-10 shrink-0 border-t bg-background p-4">
-            <div className="mb-3 space-y-3">
+            <div className="mb-3 space-y-3 empty:mb-0">
               {isEnding ? (
                 <StatusNotice
                   title="正在准备报告"
@@ -641,7 +665,7 @@ export function PracticeRoom({ scenario }: PracticeRoomProps) {
           </div>
         </section>
 
-        <div className="min-h-0 lg:sticky lg:top-[88px] lg:max-h-[calc(100vh-112px)] lg:self-start lg:overflow-y-auto">
+        <div className="scrollbar-slim min-h-0 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:self-start lg:overflow-y-auto">
           <FeedbackPanel feedback={currentFeedback} isLoading={isLoading} />
         </div>
       </div>
