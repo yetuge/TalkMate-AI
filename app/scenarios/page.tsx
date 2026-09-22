@@ -1,61 +1,85 @@
+import { Clock3, History, ListChecks, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { ArrowLeft, Clock3, History, Sparkles } from "lucide-react";
 import { ScenarioCard } from "@/components/ScenarioCard";
+import { SiteFooter, SiteNav } from "@/components/SiteChrome";
 import { scenarios } from "@/lib/scenarios";
 
 export default function ScenariosPage() {
   return (
-    <main className="min-h-screen bg-muted px-6 py-8">
-      <section className="mx-auto max-w-6xl">
-        <nav className="flex flex-wrap items-center justify-between gap-3">
-          <Link
-            className="inline-flex items-center gap-2 rounded-lg border bg-card px-4 py-2 text-sm font-bold text-card-foreground shadow-sm transition hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-            href="/"
-          >
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            TalkMate AI
-          </Link>
-          <Link
-            className="inline-flex items-center gap-2 rounded-lg border bg-card px-4 py-2 text-sm font-bold text-card-foreground shadow-sm transition hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-            href="/history"
-          >
-            <History className="h-4 w-4" aria-hidden="true" />
-            历史记录
-          </Link>
-        </nav>
+    <div className="surface-canvas min-h-screen">
+      <SiteNav />
 
-        <div className="mt-12 grid gap-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border bg-card px-4 py-2 text-sm font-semibold text-primary shadow-sm">
-              <Sparkles className="h-4 w-4" aria-hidden="true" />
-              选择练习场景
+      <main className="px-6 py-12">
+        <section className="mx-auto max-w-7xl">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)] lg:items-end">
+            <div className="animate-rise">
+              <span className="badge-pill">
+                <Sparkles className="h-4 w-4" aria-hidden="true" />
+                选择练习场景
+              </span>
+              <h1 className="mt-6 text-4xl font-extrabold leading-tight sm:text-5xl">
+                在真实场景中
+                <br />
+                <span className="text-gradient">练一口自然的英语</span>
+              </h1>
+              <p className="mt-5 max-w-xl leading-7 text-muted-foreground">
+                每个场景都有明确的 AI 角色、开场问题和练习目标。选一个最接近你实际需求的情境，立刻开始第一轮对话。
+              </p>
             </div>
-            <h1 className="mt-6 text-4xl font-black leading-tight sm:text-6xl">
-              在真实场景中练英语。
-            </h1>
+
+            <div className="card-surface animate-rise animation-delay-200 p-5">
+              <div className="flex items-start gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary-soft text-secondary">
+                  <ListChecks className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <div>
+                  <h2 className="text-base font-bold">专注练习流程</h2>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    从一个真实开场问题开始，随后进入简短英文对话，并获得针对性的即时反馈。
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-5 grid grid-cols-2 gap-3 border-t pt-5">
+                <div className="rounded-xl bg-muted/60 p-3">
+                  <p className="text-xs text-muted-foreground">可选场景</p>
+                  <p className="mt-1 text-2xl font-extrabold tabular-nums">
+                    {scenarios.length}
+                  </p>
+                </div>
+                <div className="rounded-xl bg-muted/60 p-3">
+                  <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Clock3 className="h-3 w-3" aria-hidden="true" />
+                    建议时长
+                  </p>
+                  <p className="mt-1 text-2xl font-extrabold tabular-nums">
+                    5-10
+                    <span className="ml-0.5 text-sm font-bold text-muted-foreground">
+                      分
+                    </span>
+                  </p>
+                </div>
+              </div>
+
+              <Link
+                className="btn-ghost mt-4 h-11 w-full text-sm"
+                href="/history"
+              >
+                <History className="h-4 w-4" aria-hidden="true" />
+                查看历史练习记录
+              </Link>
+            </div>
           </div>
 
-          <div className="rounded-lg border bg-card p-5 shadow-sm">
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <Clock3 className="h-5 w-5" aria-hidden="true" />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold">专注练习流程</h2>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  每次练习从一个真实开场问题开始，随后进入简短英文对话，并获得针对性的即时反馈。
-                </p>
-              </div>
-            </div>
+          <div className="mt-12 grid gap-5 md:grid-cols-2">
+            {scenarios.map((scenario) => (
+              <ScenarioCard scenario={scenario} key={scenario.id} />
+            ))}
           </div>
-        </div>
+        </section>
+      </main>
 
-        <div className="mt-8 grid gap-5 md:grid-cols-2">
-          {scenarios.map((scenario) => (
-            <ScenarioCard scenario={scenario} key={scenario.id} />
-          ))}
-        </div>
-      </section>
-    </main>
+      <SiteFooter />
+    </div>
   );
 }
